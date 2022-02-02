@@ -16,7 +16,7 @@ async function handleRequest(request) {
 
   switch (pathname) {
     case "/":
-      return new Response("Hello World!");
+      return Response.redirect("https://unificloudflareddns.com/", 301)
 
     case "/update": {
       if (request.headers.has("Authorization")) {
