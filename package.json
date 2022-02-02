@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "unifi-cloudflare-ddns",
+  "version": "1.0.0",
+  "description": "A Cloudflare worker that handles DDNS updates provided by UniFi OS",
+  "main": "index.js",
+  "scripts": {
+    "dev": "miniflare --https --verbose --watch"
+  },
+  "author": "Will Walker",
+  "devDependencies": {
+    "miniflare": "^2.2.0",
+    "node": "^17.4.0"
+  }
+}
