@@ -16,7 +16,13 @@ async function handleRequest(request) {
 
   switch (pathname) {
     case "/":
-      return Response.redirect("https://unificloudflareddns.com/", 301)
+      return new Response("Hello World!", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain;charset=UTF-8",
+          "Cache-Control": "no-store"
+        },
+      });
 
     case "/update": {
       if (request.headers.has("Authorization")) {
@@ -67,7 +73,8 @@ async function informAPI(url, name, token) {
   return new Response("DNS Record Update Successful!", {
     status: 200,
     headers: {
-      "Cache-Control": "no-store",
+      "Content-Type": "text/plain;charset=UTF-8",
+      "Cache-Control": "no-store"
     },
   });
 }
