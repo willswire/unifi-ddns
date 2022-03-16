@@ -24,7 +24,7 @@ async function handleRequest(request) {
         },
       });
 
-    case "/update": {
+    case "/nic/update": {
       if (request.headers.has("Authorization")) {
         const { username, password } = basicAuthentication(request);
 
@@ -58,7 +58,7 @@ async function handleRequest(request) {
 async function informAPI(url, name, token) {
   // Parse Url
   const hostname = url.searchParams.get("hostname");
-  const ip = url.searchParams.get("ip");
+  const ip = url.searchParams.get("myip");
 
   // Initialize API Handler
   const cloudflare = new Cloudflare({
@@ -93,7 +93,7 @@ function verifyParameters(url) {
     throw new BadRequestException("You must specify a hostname");
   }
 
-  if (!url.searchParams.get("ip")) {
+  if (!url.searchParams.get("myip")) {
     throw new BadRequestException("You must specify an ip address");
   }
 }
