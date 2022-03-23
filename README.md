@@ -23,7 +23,7 @@ I have a UniFi Dream Machine Pro (UDM-Pro), and I want to update my Cloudflare d
 - `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`, `mydomain.com` for root domain)
 - `Username`: the domain name containing the record (e.g. `mydomain.com`)
 - `Password`: the Cloudflare API Token you created earlier
-- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?hostname=%h&ip=%i`
+- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev`
 
 ## Acknowledgements
 - [inadyn](https://github.com/troglobit/inadyn) is an open-source application that supports different dynamic DNS providers. It's used by UniFi OS under-the-hood to update your public IP address. 
