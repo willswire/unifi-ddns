@@ -19,11 +19,11 @@ I have a UniFi Dream Machine Pro (UDM-Pro), and I want to update my Cloudflare d
 1. Log on to your [UniFi OS Controller](https://unifi.ui.com/)
 2. Navigate to Settings > Internet > WAN and scroll down to **Dynamic DNS**. 
 3. Click **Create New Dynamic DNS** and enter the following information:
-- `Service`: choose any service from the drop-down menu
-- `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`)
+- `Service`: choose dyndns
+- `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`, `mydomain.com` for root domain)
 - `Username`: the domain name containing the record (e.g. `mydomain.com`)
 - `Password`: the Cloudflare API Token you created earlier
-- `Server`: the Cloudflare Worker route `ddns.<worker-subdomain>.workers.dev/update?hostname=%h&ip=%i`
+- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?hostname=%h&ip=%i`
 
 ## Acknowledgements
 - [inadyn](https://github.com/troglobit/inadyn) is an open-source application that supports different dynamic DNS providers. It's used by UniFi OS under-the-hood to update your public IP address. 
