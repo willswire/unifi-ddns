@@ -3,7 +3,7 @@
  * @param {Request} request
  * @returns {Promise<Response>}
  */
-async function handleRequest(request) {
+ async function handleRequest(request) {
   const { protocol, pathname } = new URL(request.url);
 
   // Require HTTPS (TLS) connection to be secure.
@@ -15,15 +15,6 @@ async function handleRequest(request) {
   }
 
   switch (pathname) {
-    case "/":
-      return new Response("Hello World!", {
-        status: 200,
-        headers: {
-          "Content-Type": "text/plain;charset=UTF-8",
-          "Cache-Control": "no-store"
-        },
-      });
-
     case "/nic/update": {
       if (request.headers.has("Authorization")) {
         const { username, password } = basicAuthentication(request);
@@ -45,7 +36,7 @@ async function handleRequest(request) {
       return new Response(null, { status: 204 });
   }
 
-  return new Response("Not Found.", { status: 404 });
+  return new Response(null, { status: 404 });
 }
 
 /**
@@ -67,16 +58,28 @@ async function informAPI(url, name, token) {
 
   const zone = await cloudflare.findZone(name);
   const record = await cloudflare.findRecord(zone, hostname);
-  const result = await cloudflare.updateRecord(record, ip);
 
-  // Only returns this response when no exception is thrown.
-  return new Response("DNS Record Update Successful!", {
-    status: 200,
-    headers: {
-      "Content-Type": "text/plain;charset=UTF-8",
-      "Cache-Control": "no-store"
-    },
-  });
+  if (record.content != ip) {
+    const result = await cloudflare.updateRecord(record, ip);
+
+    // return good if ip was changed
+    return new Response("good " + ip, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8",
+        "Cache-Control": "no-store"
+      },
+    });
+  }
+
+  // return nochg if ip wasn't changed
+  return new Response("nochg " + ip, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8",
+        "Cache-Control": "no-store"
+      },
+    });
 }
 
 /**
@@ -135,7 +138,7 @@ function basicAuthentication(request) {
 class UnauthorizedException {
   constructor(reason) {
     this.status = 401;
-    this.statusText = "Unauthorized";
+    this.statusText = "badauth";
     this.reason = reason;
   }
 }
