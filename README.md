@@ -21,7 +21,7 @@ You must have a Cloudflare account and your domain must be configured to point t
 1. Log on to your [UniFi OS Controller](https://unifi.ui.com/)
 2. Navigate to Settings > Internet > WAN and scroll down to **Dynamic DNS**. 
 3. Click **Create New Dynamic DNS** and enter the following information:
-- `Service`: choose afraid (although any configuration should work)
+- `Service`: you must choose `dyndns`
 - `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`, `mydomain.com` for root domain)
 - `Username`: the domain name containing the record (e.g. `mydomain.com`)
 - `Password`: the Cloudflare API Token you created earlier
@@ -30,13 +30,13 @@ You must have a Cloudflare account and your domain must be configured to point t
 ## Solution 2 - Free Hosted Configuration (BETA)
 
 ### Overview
-Because the Worker code makes requests to Cloudflare's API on your behalf using your designated domain name and API key, any worker running the code found in [index.js](https://github.com/willswire/unifi-cloudflare-ddns/blob/main/index.js) will process requestes and update your DNS records accordingly. In other words, use this solution if you prefer not to manually configure anything on Cloudflare yourself!
+Because the Worker code makes requests to Cloudflare's API on your behalf using your designated domain name and API key, any worker running the code found in [index.js](https://github.com/willswire/unifi-cloudflare-ddns/blob/main/index.js) will process requestes and update your private DNS records accordingly. In other words, use this solution if you prefer not to manually configure anything on Cloudflare yourself!
 
 ### Configuring UniFi OS
 1. Log on to your [UniFi OS Controller](https://unifi.ui.com/)
 2. Navigate to Settings > Internet > WAN and scroll down to **Dynamic DNS**. 
 3. Click **Create New Dynamic DNS** and enter the following information:
-- `Service`: choose afraid (although any configuration should work)
+- `Service`: you must choose `dyndns`
 - `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`, `mydomain.com` for root domain)
 - `Username`: the domain name containing the record (e.g. `mydomain.com`)
 - `Password`: the Cloudflare API Token you created earlier
