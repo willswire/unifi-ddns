@@ -30,7 +30,7 @@ You must have a Cloudflare account and your domain must be configured to point t
 ## Solution 2 - Free Hosted Configuration (BETA)
 
 ### Overview
-Because the Worker code makes requests to Cloudflare's API on your behalf using your designated domain name and API key, any worker running the code found in [index.js](https://github.com/willswire/unifi-cloudflare-ddns/blob/main/index.js) will process requestes and update your private DNS records accordingly. In other words, use this solution if you prefer not to manually configure anything on Cloudflare yourself!
+Because the Worker code makes requests to Cloudflare's API on your behalf using your designated domain name and API key, any worker running the code found in [index.js](https://github.com/willswire/unifi-cloudflare-ddns/blob/main/index.js) will process requestes and update your DNS records accordingly. In other words, use this solution if you prefer not to manually configure anything on Cloudflare yourself!
 
 ### Configuring UniFi OS
 1. Log on to your [UniFi OS Controller](https://unifi.ui.com/)
