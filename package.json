@@ -9,7 +9,7 @@
   },
   "author": "Will Walker",
   "devDependencies": {
-    "miniflare": "^2.2.0",
-    "node": "^17.4.0"
+    "miniflare": "^2.4.0",
+    "node": "^17.7.2"
   }
 }
