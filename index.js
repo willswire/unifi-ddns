@@ -15,7 +15,7 @@
   }
 
   switch (pathname) {
-    case "/nic/update": {
+    case "/update": {
       if (request.headers.has("Authorization")) {
         const { username, password } = basicAuthentication(request);
 
@@ -36,7 +36,7 @@
       return new Response(null, { status: 204 });
   }
 
-  return new Response(null, { status: 404 });
+  return new Response("Not Found.", { status: 404 });
 }
 
 /**
@@ -49,7 +49,7 @@
 async function informAPI(url, name, token) {
   // Parse Url
   const hostname = url.searchParams.get("hostname");
-  const ip = url.searchParams.get("myip");
+  const ip = url.searchParams.get("ip");
 
   // Initialize API Handler
   const cloudflare = new Cloudflare({
@@ -58,28 +58,16 @@ async function informAPI(url, name, token) {
 
   const zone = await cloudflare.findZone(name);
   const record = await cloudflare.findRecord(zone, hostname);
+  const result = await cloudflare.updateRecord(record, ip);
 
-  if (record.content != ip) {
-    const result = await cloudflare.updateRecord(record, ip);
-
-    // return good if ip was changed
-    return new Response("good " + ip, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/plain;charset=UTF-8",
-        "Cache-Control": "no-store"
-      },
-    });
-  }
-
-  // return nochg if ip wasn't changed
-  return new Response("nochg " + ip, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/plain;charset=UTF-8",
-        "Cache-Control": "no-store"
-      },
-    });
+  // Only returns this response when no exception is thrown.
+  return new Response(`DNS Record Update Successful!`, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/plain;charset=UTF-8",
+      "Cache-Control": "no-store"
+    },
+  });
 }
 
 /**
@@ -96,7 +84,7 @@ function verifyParameters(url) {
     throw new BadRequestException("You must specify a hostname");
   }
 
-  if (!url.searchParams.get("myip")) {
+  if (!url.searchParams.get("ip")) {
     throw new BadRequestException("You must specify an ip address");
   }
 }
@@ -138,7 +126,7 @@ function basicAuthentication(request) {
 class UnauthorizedException {
   constructor(reason) {
     this.status = 401;
-    this.statusText = "badauth";
+    this.statusText = "Unauthorized";
     this.reason = reason;
   }
 }
