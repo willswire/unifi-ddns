@@ -25,7 +25,7 @@ You must have a Cloudflare account and your domain must be configured to point t
 - `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`, `mydomain.com` for root domain)
 - `Username`: the domain name containing the record (e.g. `mydomain.com`)
 - `Password`: the Cloudflare API Token you created earlier
-- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=`
+- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=`. Note on devices older than the UDM the value should be configured as `<worker-name>.<worker-subdomain>.workers.dev` only, with no path suffix. 
 
 ## Solution 2 - Free Hosted Configuration (BETA)
 
@@ -43,6 +43,7 @@ Because the Worker code makes requests to Cloudflare's API on your behalf using 
 - `Server`: the free, hosted Cloudflare Worker at `unificloudflareddns.com/update?ip=%i&hostname=`
 
 ## Acknowledgements
-- [inadyn](https://github.com/troglobit/inadyn) is an open-source application that supports different dynamic DNS providers. It's used by UniFi OS under-the-hood to update your public IP address. 
+- [inadyn](https://github.com/troglobit/inadyn) is an open-source application that supports different dynamic DNS providers. It's used by UniFi OS on newer devices under-the-hood to update your public IP address. (UDM onwards)
+- [ddclient](https://github.com/ddclient/ddclient) is an open-source application that supports different dynamic DNS providers. It's used by UniFi OS on older devices under-the-hood to update your public IP address. (such as the USG-3P)
 - [inadyn-cloudflare](https://github.com/blackjid/inadyn-cloudflare) much of the code for this project is taken from [blackjid](https://github.com/blackjid)'s project. 
 - [Cloudflare Workers Basic Auth Example](https://developers.cloudflare.com/workers/examples/basic-auth)
