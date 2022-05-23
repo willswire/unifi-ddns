@@ -61,7 +61,7 @@ async function informAPI(url, name, token) {
   const result = await cloudflare.updateRecord(record, ip);
 
   // Only returns this response when no exception is thrown.
-  return new Response(`DNS Record Update Successful!`, {
+  return new Response(`good`, {
     status: 200,
     headers: {
       "Content-Type": "text/plain;charset=UTF-8",
