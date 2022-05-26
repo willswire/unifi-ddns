@@ -15,7 +15,9 @@
   }
 
   switch (pathname) {
-    case "/update": {
+
+    case "/nic/update":
+    case "/update":
       if (request.headers.has("Authorization")) {
         const { username, password } = basicAuthentication(request);
 
@@ -29,7 +31,6 @@
       }
 
       throw new BadRequestException("Please provide valid credentials.");
-    }
 
     case "/favicon.ico":
     case "/robots.txt":
@@ -49,7 +50,9 @@
 async function informAPI(url, name, token) {
   // Parse Url
   const hostname = url.searchParams.get("hostname");
-  const ip = url.searchParams.get("ip");
+  // Get the IP address. This can accept two query parameters, this will
+  // use the "ip" query parameter if it is set, otherwise falling back to "myip". 
+  const ip = url.searchParams.get("ip") || url.searchParams.get("myip");
 
   // Initialize API Handler
   const cloudflare = new Cloudflare({
@@ -84,7 +87,7 @@ function verifyParameters(url) {
     throw new BadRequestException("You must specify a hostname");
   }
 
-  if (!url.searchParams.get("ip")) {
+  if (!(url.searchParams.get("ip") || url.searchParams.get("myip"))) {
     throw new BadRequestException("You must specify an ip address");
   }
 }
