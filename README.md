@@ -7,7 +7,7 @@ A Cloudflare Worker script that exposes a UniFi-compatible DDNS API to dynamical
 I have a UniFi Dream Machine Pro (UDM-Pro), and I want to update my Cloudflare domain name DNS records when my public IP address changes. Unfortunately, UniFi does not come pre-configured to support Cloudflare as one of its DDNS providers.
 
 ### Configuring Cloudflare
-You must have a Cloudflare account and your domain must be configured to point to the Cloudflare nameservers before you continue. If you do not wish to create your own Cloudflare worker, please consider `Solution 2 - Hosted Configuration`.
+You must have a Cloudflare account and your domain must be configured to point to the Cloudflare nameservers before you continue.
 
 1. Create a new [Cloudflare Worker](https://workers.cloudflare.com)
 2. 'Quick Edit' the worker within your browser.
@@ -23,7 +23,7 @@ You must have a Cloudflare account and your domain must be configured to point t
 - `Hostname`: the full subdomain and hostname of the record you want to update (e.g. `subdomain.mydomain.com`, `mydomain.com` for root domain)
 - `Username`: the domain name containing the record (e.g. `mydomain.com`)
 - `Password`: the Cloudflare API Token you created earlier
-- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=`. 
+- `Server`: the Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h`. 
 
 #### Important Note!
 On UniFi devices older than the UDM, the `Server` value should be configured as seen below, with no path suffix: 
