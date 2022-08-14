@@ -4,16 +4,6 @@
  * @returns {Promise<Response>}
  */
 async function handleRequest(request) {
-  try {
-    const response = await handleRequestInternal(request);
-    return response;
-  } catch(err) {
-    console.error(err.constructor.name, err);
-    throw err;
-  }
-}
-
-async function handleRequestInternal(request) {
   const { protocol, pathname } = new URL(request.url);
 
   // Require HTTPS (TLS) connection to be secure.
@@ -227,6 +217,7 @@ class Cloudflare {
 addEventListener("fetch", (event) => {
   event.respondWith(
     handleRequest(event.request).catch((err) => {
+      console.error(err.constructor.name, err);
       const message = err.reason || err.stack || "Unknown Error";
 
       return new Response(message, {
