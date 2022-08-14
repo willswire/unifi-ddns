@@ -3,7 +3,17 @@
  * @param {Request} request
  * @returns {Promise<Response>}
  */
- async function handleRequest(request) {
+async function handleRequest(request) {
+  try {
+    const response = await handleRequestInternal(request);
+    return response;
+  } catch(err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+async function handleRequestInternal(request) {
   const { protocol, pathname } = new URL(request.url);
 
   // Require HTTPS (TLS) connection to be secure.
