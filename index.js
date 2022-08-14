@@ -8,7 +8,7 @@ async function handleRequest(request) {
     const response = await handleRequestInternal(request);
     return response;
   } catch(err) {
-    console.error(err);
+    console.error(err.constructor.name, err);
     throw err;
   }
 }
@@ -152,6 +152,14 @@ class BadRequestException {
   }
 }
 
+class CloudflareApiException {
+  constructor(reason) {
+    this.status = 500;
+    this.statusText = "Internal Server Error";
+    this.reason = reason;
+  }
+}
+
 class Cloudflare {
   constructor(options) {
     this.cloudflare_url = "https://api.cloudflare.com/client/v4";
@@ -171,6 +179,9 @@ class Cloudflare {
         }
       );
       var body = await response.json();
+      if(body.success !== true || body.result.length === 0) {
+        throw new CloudflareApiException("Failed to find zone '" + name + "'");
+      }
       return body.result[0];
     };
 
@@ -185,6 +196,9 @@ class Cloudflare {
         }
       );
       var body = await response.json();
+      if(body.success !== true || body.result.length === 0) {
+        throw new CloudflareApiException("Failed to find dns record '" + name + "'");
+      }
       return body.result[0];
     };
 
@@ -202,6 +216,9 @@ class Cloudflare {
         }
       );
       var body = await response.json();
+      if(body.success !== true) {
+        throw new CloudflareApiException("Failed to update dns record");
+      }
       return body.result[0];
     };
   }
