@@ -3,7 +3,7 @@
  * @param {Request} request
  * @returns {Promise<Response>}
  */
- async function handleRequest(request) {
+async function handleRequest(request) {
   const { protocol, pathname } = new URL(request.url);
 
   // Require HTTPS (TLS) connection to be secure.
@@ -142,6 +142,14 @@ class BadRequestException {
   }
 }
 
+class CloudflareApiException {
+  constructor(reason) {
+    this.status = 500;
+    this.statusText = "Internal Server Error";
+    this.reason = reason;
+  }
+}
+
 class Cloudflare {
   constructor(options) {
     this.cloudflare_url = "https://api.cloudflare.com/client/v4";
@@ -161,6 +169,9 @@ class Cloudflare {
         }
       );
       var body = await response.json();
+      if(body.success !== true || body.result.length === 0) {
+        throw new CloudflareApiException("Failed to find zone '" + name + "'");
+      }
       return body.result[0];
     };
 
@@ -175,6 +186,9 @@ class Cloudflare {
         }
       );
       var body = await response.json();
+      if(body.success !== true || body.result.length === 0) {
+        throw new CloudflareApiException("Failed to find dns record '" + name + "'");
+      }
       return body.result[0];
     };
 
@@ -192,6 +206,9 @@ class Cloudflare {
         }
       );
       var body = await response.json();
+      if(body.success !== true) {
+        throw new CloudflareApiException("Failed to update dns record");
+      }
       return body.result[0];
     };
   }
@@ -200,6 +217,7 @@ class Cloudflare {
 addEventListener("fetch", (event) => {
   event.respondWith(
     handleRequest(event.request).catch((err) => {
+      console.error(err.constructor.name, err);
       const message = err.reason || err.stack || "Unknown Error";
 
       return new Response(message, {
