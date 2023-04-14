@@ -49,7 +49,7 @@ async function handleRequest(request) {
  */
 async function informAPI(url, name, token) {
   // Parse Url
-  const hostname = url.searchParams.get("hostname");
+  const hostnames = url.searchParams.get("hostname").split(",");
   // Get the IP address. This can accept two query parameters, this will
   // use the "ip" query parameter if it is set, otherwise falling back to "myip". 
   const ip = url.searchParams.get("ip") || url.searchParams.get("myip");
@@ -60,8 +60,10 @@ async function informAPI(url, name, token) {
   });
 
   const zone = await cloudflare.findZone(name);
-  const record = await cloudflare.findRecord(zone, hostname);
-  const result = await cloudflare.updateRecord(record, ip);
+  for (const hostname of hostnames) {
+    const record = await cloudflare.findRecord(zone, hostname);
+    const result = await cloudflare.updateRecord(record, ip);
+  }
 
   // Only returns this response when no exception is thrown.
   return new Response(`good`, {
