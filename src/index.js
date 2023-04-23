@@ -77,7 +77,7 @@ function requireHttps(request) {
 function parseBasicAuth(request) {
 	const Authorization = request.headers.get("Authorization");
 	const [scheme, encoded] = Authorization.split(" ");
-	const buffer = Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0));
+	const buffer = Uint8Array.from(Buffer.from(encoded, 'base64'), (c) => c.charCodeAt(0));
 	const decoded = new TextDecoder().decode(buffer).normalize();
 	const index = decoded.indexOf(":");
 
