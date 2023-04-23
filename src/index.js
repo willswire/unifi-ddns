@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 class BadRequestException extends Error {
 	constructor(reason) {
 		super(reason);
@@ -76,9 +78,8 @@ function requireHttps(request) {
 
 function parseBasicAuth(request) {
 	const Authorization = request.headers.get("Authorization");
-	const [scheme, encoded] = Authorization.split(" ");
-	const buffer = Uint8Array.from(Buffer.from(encoded, 'base64'), (c) => c.charCodeAt(0));
-	const decoded = new TextDecoder().decode(buffer).normalize();
+	const [scheme, data] = Authorization.split(" ");
+	const decoded = Buffer.from(data, 'base64').toString('ascii');
 	const index = decoded.indexOf(":");
 
 	if (index === -1 || /[\0-\x1F\x7F]/.test(decoded)) {
