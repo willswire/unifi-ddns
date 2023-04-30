@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from 'node:buffer';
 
 class BadRequestException extends Error {
 	constructor(reason) {
