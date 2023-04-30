@@ -2,15 +2,11 @@
   "name": "unifi-cloudflare-ddns",
   "version": "2.0.0",
   "devDependencies": {
-    "jest": "^29.5.0",
     "wrangler": "2.16.0"
   },
   "private": true,
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler publish"
-  },
-  "dependencies": {
-    "buffer": "^6.0.3"
   }
 }
