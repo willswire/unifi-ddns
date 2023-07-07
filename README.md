@@ -11,7 +11,7 @@ You must have a Cloudflare account and your domain must be configured to point t
 
 1. Clone or download this project
 2. Ensure you have the [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed on your system
-3. Log in with wrangler, and run `wrangler publish`.
+3. Log in with wrangler, and run `wrangler deploy`.
 4. Once you have created the worker, take note of it's \*.workers.dev route. More on routes for Cloudflare Workers [here](https://developers.cloudflare.com/workers/platform/routes#routes-with-workersdev).
 5. Create an API token so the Worker can update your DNS records. Go to https://dash.cloudflare.com/profile/api-tokens and select "Create token". On the next page, scroll down and click the "Get Started" button next to the "Create Custom Token" label. Select **Zone:DNS:Edit** for the "Permissions" drop-down, and include your target zone under the "Zone Resources" drop-down. Copy your API Key - you will need it later when configuring your UniFi OS Controller.
 
