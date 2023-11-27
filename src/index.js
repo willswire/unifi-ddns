@@ -31,13 +31,14 @@ class Cloudflare {
 		return body.result[0];
 	}
 
-	async findRecord(zone, name) {
+	async findRecord(zone, name, isIPV4 = true) {
+		const rrType = isIPV4 ? "A" : "AAAA";
 		const response = await this._fetchWithToken(`zones/${zone.id}/dns_records?name=${name}`);
 		const body = await response.json();
 		if (!body.success || body.result.length === 0) {
 			throw new CloudflareApiException(`Failed to find dns record '${name}'`);
 		}
-		return body.result[0];
+		return body.result?.filter(rr => rr.type === rrType)[0];
 	}
 
 	async updateRecord(record, value) {
@@ -77,8 +78,10 @@ function requireHttps(request) {
 }
 
 function parseBasicAuth(request) {
-	const Authorization = request.headers.get("Authorization");
-	const [scheme, data] = Authorization.split(" ");
+	const authorization = request.headers.get("Authorization");
+	if (!authorization) return {};
+
+	const [, data] = authorization?.split(" ");
 	const decoded = Buffer.from(data, 'base64').toString('ascii');
 	const index = decoded.indexOf(":");
 
@@ -87,8 +90,8 @@ function parseBasicAuth(request) {
 	}
 
 	return {
-		username: decoded.substring(0, index),
-		password: decoded.substring(index + 1),
+		username: decoded?.substring(0, index),
+		password: decoded?.substring(index + 1),
 	};
 }
 
@@ -100,47 +103,53 @@ async function handleRequest(request) {
 		return new Response(null, { status: 204 });
 	}
 
-	if (pathname !== "/nic/update" && pathname !== "/update") {
+	if (!pathname.endsWith("/update")) {
 		return new Response("Not Found.", { status: 404 });
 	}
 
-	if (!request.headers.has("Authorization")) {
-		throw new BadRequestException("Please provide valid credentials.");
+	if (!request.headers.has("Authorization") && !request.url.includes("token=")) {
+		return new Response("Not Found.", { status: 404 });
 	}
 
 	const { username, password } = parseBasicAuth(request);
 	const url = new URL(request.url);
-	verifyParameters(url);
+    const params = url.searchParams;
 
-	const response = await informAPI(url, username, password);
-	return response;
-}
+	// duckdns uses ?token=
+	const token = password || params?.get("token");
 
-function verifyParameters(url) {
-	const { searchParams } = url;
+	// dyndns uses ?hostname= and ?myip=
+	// duckdns uses ?domains= and ?ip=
+	// ydns uses ?host=
+	const hostnameParam = params?.get("hostname") || params?.get("host") || params?.get("domains");
+    const hostnames = hostnameParam?.split(",");
 
-	if (!searchParams) {
-		throw new BadRequestException("You must include proper query parameters");
-	}
+	// fallback to connecting IP address
+	const ip = params?.get("ip") || params?.get("myip") || request.headers.get("Cf-Connecting-Ip");
 
-	if (!searchParams.get("hostname")) {
+	if (!hostnames || hostnames.length === 0) {
 		throw new BadRequestException("You must specify a hostname");
 	}
 
-	if (!(searchParams.get("ip") || searchParams.get("myip"))) {
-		throw new BadRequestException("You must specify an ip address");
-	}
+	const response = await informAPI(hostnames, ip, username, password);
+	return response;
 }
 
-async function informAPI(url, name, token) {
-	const hostnames = url.searchParams.get("hostname").split(",");
-	const ip = url.searchParams.get("ip") || url.searchParams.get("myip");
+async function informAPI(hostnames, ip, name, token) {
 
 	const cloudflare = new Cloudflare({ token });
 
-	const zone = await cloudflare.findZone(name);
+	const isIPV4 = ip.includes("."); //poorman's ipv4 check
+
+    const zones = new Map();
+
 	for (const hostname of hostnames) {
-		const record = await cloudflare.findRecord(zone, hostname);
+        const domainName = name && hostname.endsWith(name) ? name : hostname.replace(/.*?([^.]+\.[^.]+)$/, "$1");
+
+		if (!zones.has(domainName)) zones.set(domainName, await cloudflare.findZone(domainName));
+
+        const zone = zones.get(domainName);
+		const record = await cloudflare.findRecord(zone, hostname, isIPV4);
 		await cloudflare.updateRecord(record, ip);
 	}
 
