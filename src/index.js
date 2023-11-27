@@ -113,7 +113,7 @@ async function handleRequest(request) {
 
 	const { username, password } = parseBasicAuth(request);
 	const url = new URL(request.url);
-    const params = url.searchParams;
+	const params = url.searchParams;
 
 	// duckdns uses ?token=
 	const token = password || params?.get("token");
@@ -122,7 +122,7 @@ async function handleRequest(request) {
 	// duckdns uses ?domains= and ?ip=
 	// ydns uses ?host=
 	const hostnameParam = params?.get("hostname") || params?.get("host") || params?.get("domains");
-    const hostnames = hostnameParam?.split(",");
+	const hostnames = hostnameParam?.split(",");
 
 	// fallback to connecting IP address
 	const ip = params?.get("ip") || params?.get("myip") || request.headers.get("Cf-Connecting-Ip");
@@ -141,14 +141,14 @@ async function informAPI(hostnames, ip, name, token) {
 
 	const isIPV4 = ip.includes("."); //poorman's ipv4 check
 
-    const zones = new Map();
+	const zones = new Map();
 
 	for (const hostname of hostnames) {
-        const domainName = name && hostname.endsWith(name) ? name : hostname.replace(/.*?([^.]+\.[^.]+)$/, "$1");
+		const domainName = name && hostname.endsWith(name) ? name : hostname.replace(/.*?([^.]+\.[^.]+)$/, "$1");
 
 		if (!zones.has(domainName)) zones.set(domainName, await cloudflare.findZone(domainName));
 
-        const zone = zones.get(domainName);
+		const zone = zones.get(domainName);
 		const record = await cloudflare.findRecord(zone, hostname, isIPV4);
 		await cloudflare.updateRecord(record, ip);
 	}
