@@ -10,8 +10,7 @@ I have a UniFi Dream Machine Pro (UDM-Pro), and I want to update my Cloudflare d
 You must have a Cloudflare account and your domain must be configured to point to the Cloudflare nameservers before you continue.
 
 #### Install With Click To Deploy
-1. [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/workerforce/unifi-ddns)
-2. Follow the instruction in the deployment UI
+1. Deploy the Worker: [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/workerforce/unifi-ddns)
 3. Navigate to the Cloudflare Workers dashboard
 4. Once the deployment is complete, take note of it's \*.workers.dev route. More on routes for Cloudflare Workers [here](https://developers.cloudflare.com/workers/platform/routes#routes-with-workersdev).
 5. Create an API token so the Worker can update your DNS records. Go to https://dash.cloudflare.com/profile/api-tokens and select "Create token". On the next page, scroll down and click the "Get Started" button next to the "Create Custom Token" label. Select **Zone:DNS:Edit** for the "Permissions" drop-down, and include your target zone under the "Zone Resources" drop-down. Copy your API Key - you will need it later when configuring your UniFi OS Controller.
