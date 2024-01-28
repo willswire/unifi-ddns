@@ -1,0 +1,18 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.UN99CNoK9YfrSr7Q3KYb5dE5Oe8U1KxMg7r-C5s8 }}
+          accountId: ${{ secrets.9750c124ed2ce7c1e0bc58191e9e49b3 }}
