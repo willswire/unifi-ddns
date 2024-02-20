@@ -4,7 +4,7 @@ A Cloudflare Worker script that provides a UniFi-compatible DDNS API to dynamica
 
 ## Why?
 
-UniFi Dream Machine Pro (UDM-Pro) users may need to update Cloudflare domain name DNS records when their public IP address changes. UniFi does not natively support Cloudflare as a DDNS provider.
+UniFi Dream Machine Pro (UDM-Pro) or UniFi Security Gateway (USG) users may need to update Cloudflare domain name DNS records when their public IP address changes. UniFi does not natively support Cloudflare as a DDNS provider.
 
 ### Configuring Cloudflare
 
@@ -32,7 +32,7 @@ Ensure you have a Cloudflare account and your domain is configured to point to C
 ### Configuring UniFi OS
 
 1. Log in to your [UniFi OS Controller](https://unifi.ui.com/).
-2. Navigate to Settings > Internet > WAN and scroll down to **Dynamic DNS**. 
+2. Navigate to Settings > Internet > WAN and scroll down to **Dynamic DNS**.
 3. Click **Create New Dynamic DNS** and provide:
    - `Service`: Choose `dyndns`.
    - `Hostname`: Full subdomain and hostname to update (e.g., `subdomain.mydomain.com`, `mydomain.com` for root domain).
@@ -41,14 +41,24 @@ Ensure you have a Cloudflare account and your domain is configured to point to C
    - `Server`: Cloudflare Worker route `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h`.
      - For older UniFi devices, omit the URL path.
      - Remove `https://` from the URL.
-     
-To test the configuration and force an update:
+
+#### Testing Changes - UDM-Pro
+To test the configuration and force an update on a UDM-Pro:
 
 1. SSH into your UniFi device.
 2. Run `ps aux | grep inadyn`.
 3. Note the configuration file path.
 4. Run `inadyn -n -1 --force -f <config-path>` (e.g., `inadyn -n -1 --force -f /run/ddns-eth4-inadyn.conf`).
 5. Check `/var/log/messages` for related error messages.
+
+#### Testing Changes - USG
+To test the configuration and force an update on a USG:
+
+1. SSH into your USG device.
+2. Run `ls /run/ddclient/` (e.g.: `/run/ddclient/ddclient_eth0.pid`)
+3. Note the pid file path as this will tell you what configuration to use. (e.g.: `ddclient_eth0`)
+4. Run `sudo ddclient -daemon=0 -verbose -noquiet -debug -file /etc/ddclient/<config>.conf` (e.g., `sudo ddclient -daemon=0 -verbose -noquiet -debug -file /etc/ddclient/ddclient_eth0.conf`).
+5. This should output `SUCCESS` when the DNS record is set.
 
 #### Important Notes!
 
