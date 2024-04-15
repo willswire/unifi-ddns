@@ -1,5 +1,3 @@
-import { Buffer } from 'node:buffer';
-
 class BadRequestException extends Error {
 	constructor(reason) {
 		super(reason);
@@ -82,7 +80,7 @@ function parseBasicAuth(request) {
 	if (!authorization) return {};
 
 	const [, data] = authorization?.split(" ");
-	const decoded = Buffer.from(data, 'base64').toString('ascii');
+	const decoded = atob(data);
 	const index = decoded.indexOf(":");
 
 	if (index === -1 || /[\0-\x1F\x7F]/.test(decoded)) {
