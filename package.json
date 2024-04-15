@@ -8,8 +8,5 @@
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler deploy"
-  },
-  "dependencies": {
-    "buffer": "^6.0.3"
   }
 }
