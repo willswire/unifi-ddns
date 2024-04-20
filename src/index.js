@@ -125,14 +125,24 @@ async function handleRequest(request) {
 	const hostnames = hostnameParam?.split(",");
 
 	// fallback to connecting IP address
-	const ip = params?.get("ip") || params?.get("myip") || request.headers.get("Cf-Connecting-Ip");
+	const ipsParam = params.get("ips") || params.get("ip") || params.get("myip") || request.headers.get("Cf-Connecting-Ip");
+   	const ips = ipsParam?.split(",");
 
-	if (!hostnames || hostnames.length === 0) {
-		throw new BadRequestException("You must specify a hostname");
+	if (!hostnames || hostnames.length === 0 || !ips || ips.length === 0) {
+	        throw new BadRequestException("You must specify both hostname(s) and IP address(es)");
 	}
 
-	const response = await informAPI(hostnames, ip, username, password);
-	return response;
+	// Iterate over each IP and update DNS records for all hostnames
+    	for (const ip of ips) {
+		await informAPI(hostnames, ip.trim(), username, token);
+    	}
+	return new Response("good", {
+        	status: 200,
+		headers: {
+          	  	"Content-Type": "text/plain;charset=UTF-8",
+        	    	"Cache-Control": "no-store",
+        	},
+    	});
 }
 
 async function informAPI(hostnames, ip, name, token) {
@@ -152,14 +162,6 @@ async function informAPI(hostnames, ip, name, token) {
 		const record = await cloudflare.findRecord(zone, hostname, isIPV4);
 		await cloudflare.updateRecord(record, ip);
 	}
-
-	return new Response("good", {
-		status: 200,
-		headers: {
-			"Content-Type": "text/plain;charset=UTF-8",
-			"Cache-Control": "no-store",
-		},
-	});
 }
 
 export default {
