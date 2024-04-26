@@ -34,7 +34,7 @@ Ensure you have a Cloudflare account and your domain is configured to point to C
 1. Log in to your [UniFi OS Controller](https://unifi.ui.com/).
 2. Navigate to Settings > Internet > WAN and scroll down to **Dynamic DNS**.
 3. Click **Create New Dynamic DNS** and provide:
-   - `Service`: Choose `custom`.
+   - `Service`: Choose `custom` or `dyndns`.
    - `Hostname`: Full subdomain and hostname to update (e.g., `subdomain.mydomain.com` or `mydomain.com` for root domain).
    - `Username`: Domain name containing the record (e.g., `mydomain.com`).
    - `Password`: Cloudflare API Token.
