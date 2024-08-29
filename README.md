@@ -18,6 +18,8 @@ Ensure you have a Cloudflare account and your domain is configured to point to C
 4. Create an API token to update DNS records: 
    - Go to https://dash.cloudflare.com/profile/api-tokens.
    - Click "Create token", select "Create Custom Token".
+   - Choose "Edit Cloudflare Workers" Template
+   - Select "+Add More"
    - Choose **Zone:DNS:Edit** for permissions, and include your zone under "Zone Resources". 
    - Copy your API Key for later use in UniFi OS Controller configuration.
 
