@@ -1,5 +1,3 @@
-import { Buffer } from 'node:buffer';
-
 class BadRequestException extends Error {
 	constructor(reason) {
 		super(reason);
@@ -31,13 +29,14 @@ class Cloudflare {
 		return body.result[0];
 	}
 
-	async findRecord(zone, name) {
+	async findRecord(zone, name, isIPV4 = true) {
+		const rrType = isIPV4 ? "A" : "AAAA";
 		const response = await this._fetchWithToken(`zones/${zone.id}/dns_records?name=${name}`);
 		const body = await response.json();
 		if (!body.success || body.result.length === 0) {
 			throw new CloudflareApiException(`Failed to find dns record '${name}'`);
 		}
-		return body.result[0];
+		return body.result?.filter(rr => rr.type === rrType)[0];
 	}
 
 	async updateRecord(record, value) {
@@ -77,9 +76,11 @@ function requireHttps(request) {
 }
 
 function parseBasicAuth(request) {
-	const Authorization = request.headers.get("Authorization");
-	const [scheme, data] = Authorization.split(" ");
-	const decoded = Buffer.from(data, 'base64').toString('ascii');
+	const authorization = request.headers.get("Authorization");
+	if (!authorization) return {};
+
+	const [, data] = authorization?.split(" ");
+	const decoded = atob(data);
 	const index = decoded.indexOf(":");
 
 	if (index === -1 || /[\0-\x1F\x7F]/.test(decoded)) {
@@ -87,8 +88,8 @@ function parseBasicAuth(request) {
 	}
 
 	return {
-		username: decoded.substring(0, index),
-		password: decoded.substring(index + 1),
+		username: decoded?.substring(0, index),
+		password: decoded?.substring(index + 1),
 	};
 }
 
@@ -100,57 +101,65 @@ async function handleRequest(request) {
 		return new Response(null, { status: 204 });
 	}
 
-	if (pathname !== "/nic/update" && pathname !== "/update") {
+	if (!pathname.endsWith("/update")) {
 		return new Response("Not Found.", { status: 404 });
 	}
 
-	if (!request.headers.has("Authorization")) {
-		throw new BadRequestException("Please provide valid credentials.");
+	if (!request.headers.has("Authorization") && !request.url.includes("token=")) {
+		return new Response("Not Found.", { status: 404 });
 	}
 
 	const { username, password } = parseBasicAuth(request);
 	const url = new URL(request.url);
-	verifyParameters(url);
+	const params = url.searchParams;
 
-	const response = await informAPI(url, username, password);
-	return response;
+	// duckdns uses ?token=
+	const token = password || params?.get("token");
+
+	// dyndns uses ?hostname= and ?myip=
+	// duckdns uses ?domains= and ?ip=
+	// ydns uses ?host=
+	const hostnameParam = params?.get("hostname") || params?.get("host") || params?.get("domains");
+	const hostnames = hostnameParam?.split(",");
+
+	// fallback to connecting IP address
+	const ipsParam = params.get("ips") || params.get("ip") || params.get("myip") || request.headers.get("Cf-Connecting-Ip");
+   	const ips = ipsParam?.split(",");
+
+	if (!hostnames || hostnames.length === 0 || !ips || ips.length === 0) {
+	        throw new BadRequestException("You must specify both hostname(s) and IP address(es)");
+	}
+
+	// Iterate over each IP and update DNS records for all hostnames
+    	for (const ip of ips) {
+		await informAPI(hostnames, ip.trim(), username, token);
+    	}
+	return new Response("good", {
+        	status: 200,
+		headers: {
+          	  	"Content-Type": "text/plain;charset=UTF-8",
+        	    	"Cache-Control": "no-store",
+        	},
+    	});
 }
 
-function verifyParameters(url) {
-	const { searchParams } = url;
-
-	if (!searchParams) {
-		throw new BadRequestException("You must include proper query parameters");
-	}
-
-	if (!searchParams.get("hostname")) {
-		throw new BadRequestException("You must specify a hostname");
-	}
-
-	if (!(searchParams.get("ip") || searchParams.get("myip"))) {
-		throw new BadRequestException("You must specify an ip address");
-	}
-}
-
-async function informAPI(url, name, token) {
-	const hostnames = url.searchParams.get("hostname").split(",");
-	const ip = url.searchParams.get("ip") || url.searchParams.get("myip");
+async function informAPI(hostnames, ip, name, token) {
 
 	const cloudflare = new Cloudflare({ token });
 
-	const zone = await cloudflare.findZone(name);
+	const isIPV4 = ip.includes("."); //poorman's ipv4 check
+
+	const zones = new Map();
+
 	for (const hostname of hostnames) {
-		const record = await cloudflare.findRecord(zone, hostname);
+		const domainName = name && hostname.endsWith(name) ? name : hostname.replace(/.*?([^.]+\.[^.]+)$/, "$1");
+
+		if (!zones.has(domainName)) zones.set(domainName, await cloudflare.findZone(domainName));
+
+		const zone = zones.get(domainName);
+		const record = await cloudflare.findRecord(zone, hostname, isIPV4);
 		await cloudflare.updateRecord(record, ip);
 	}
-
-	return new Response("good", {
-		status: 200,
-		headers: {
-			"Content-Type": "text/plain;charset=UTF-8",
-			"Cache-Control": "no-store",
-		},
-	});
 }
 
 export default {
