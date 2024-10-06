@@ -34,7 +34,7 @@ class Cloudflare {
 		const response = await this._fetchWithToken(`zones/${zone.id}/dns_records?name=${name}`);
 		const body = await response.json();
 		if (!body.success || body.result.length === 0) {
-			throw new CloudflareApiException(`Failed to find dns record '${name}'`);
+			throw new CloudflareApiException(`Failed to find dns record '${name}', zones/${zone.id}/dns_records?name=${name}: ${response.statusText} ${response.status}`);
 		}
 		return body.result?.filter(rr => rr.type === rrType)[0];
 	}
