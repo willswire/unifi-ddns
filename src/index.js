@@ -26,7 +26,7 @@ class Cloudflare {
 		if (!body.success || body.result.length === 0) {
 			throw new CloudflareApiException(`Failed to find zone '${name}'`);
 		}
-		return body.result[0];
+		return body.result;
 	}
 
 	async findRecord(zone, name, isIPV4 = true) {
@@ -36,7 +36,7 @@ class Cloudflare {
 		if (!body.success || body.result.length === 0) {
 			throw new CloudflareApiException(`Failed to find dns record '${name}'`);
 		}
-		return body.result?.filter(rr => rr.type === rrType)[0];
+		return body.result.filter(rr => rr.type === rrType)[0];
 	}
 
 	async updateRecord(record, value) {
@@ -79,7 +79,7 @@ function parseBasicAuth(request) {
 	const authorization = request.headers.get("Authorization");
 	if (!authorization) return {};
 
-	const [, data] = authorization?.split(" ");
+	const [, data] = authorization.split(" ");
 	const decoded = atob(data);
 	const index = decoded.indexOf(":");
 
@@ -88,8 +88,8 @@ function parseBasicAuth(request) {
 	}
 
 	return {
-		username: decoded?.substring(0, index),
-		password: decoded?.substring(index + 1),
+		username: decoded.substring(0, index),
+		password: decoded.substring(index + 1),
 	};
 }
 
@@ -114,17 +114,17 @@ async function handleRequest(request) {
 	const params = url.searchParams;
 
 	// duckdns uses ?token=
-	const token = password || params?.get("token");
+	const token = password || params.get("token");
 
 	// dyndns uses ?hostname= and ?myip=
 	// duckdns uses ?domains= and ?ip=
 	// ydns uses ?host=
-	const hostnameParam = params?.get("hostname") || params?.get("host") || params?.get("domains");
-	const hostnames = hostnameParam?.split(",");
+	const hostnameParam = params.get("hostname") || params.get("host") || params.get("domains");
+	const hostnames = hostnameParam.split(",");
 
 	// fallback to connecting IP address
 	const ipsParam = params.get("ips") || params.get("ip") || params.get("myip") || request.headers.get("Cf-Connecting-Ip");
-   	const ips = ipsParam?.split(",");
+	const ips = ipsParam.split(",");
 
 	if (!hostnames || hostnames.length === 0 || !ips || ips.length === 0) {
 	        throw new BadRequestException("You must specify both hostname(s) and IP address(es)");
@@ -147,19 +147,38 @@ async function informAPI(hostnames, ip, name, token) {
 
 	const cloudflare = new Cloudflare({ token });
 
-	const isIPV4 = ip.includes("."); //poorman's ipv4 check
+	const isIPV4 = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip); // Robust IPv4 check
 
 	const zones = new Map();
 
-	for (const hostname of hostnames) {
-		const domainName = name && hostname.endsWith(name) ? name : hostname.replace(/.*?([^.]+\.[^.]+)$/, "$1");
+const findRecordPromises = hostnames.map(async (hostname) => {
+	const domainName = name && hostname.endsWith(name) ? name : hostname.replace(/.*?([^.]+\.[^.]+)$/, "$1");
 
-		if (!zones.has(domainName)) zones.set(domainName, await cloudflare.findZone(domainName));
+	if (!zones.has(domainName)) zones.set(domainName, await cloudflare.findZone(domainName));
 
-		const zone = zones.get(domainName);
-		const record = await cloudflare.findRecord(zone, hostname, isIPV4);
-		await cloudflare.updateRecord(record, ip);
+	const zone = zones.get(domainName);
+	const record = await cloudflare.findRecord(zone, hostname, isIPV4);
+
+	if (!record) {
+		// Log the message and continue to the next hostname if no DNS record is found.
+		// This ensures that the function does not fail entirely and continues to process other hostnames.
+		console.log(`No DNS record found for hostname: ${hostname}`);
+		return null; // Return null if no record is found
 	}
+
+	// If the record is found, update it.
+	return { record, ip };
+});
+
+const recordsToUpdate = await Promise.all(findRecordPromises);
+
+for (const recordData of recordsToUpdate) {
+	if (recordData) {
+		const { record, ip } = recordData;
+		record.content = ip;
+		await cloudflare.updateRecord({ ...record, content: ip });
+	}
+}
 }
 
 export default {
