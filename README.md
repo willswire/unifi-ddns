@@ -87,3 +87,5 @@ To test the configuration and force an update on a USG:
 
 - For subdomains (`sub.example.com`), create an A record manually in Cloudflare dashboard first.
 - If you encounter a hostname resolution error (`inadyn[2173778]: Failed resolving hostname https: Name or service not known`), remove `https://` from the `Server` field.
+- If you are using wildcard subdomains, be sure to enter your `Hostname` in UniFi OS as `*.mydomain.com`
+- There seems to be a bug in the UniFi OS UI that makes it impossible to edit the Dynamic DNS settings, you may need to remove the configuration and create a new one each time you need to make a change.
