@@ -1,5 +1,0 @@
-{
-	"name": "unifi-cloudflare-ddns",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node",
-	"postCreateCommand": "yarn global add wrangler"
-}
