@@ -58,19 +58,18 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 	const cloudflare = new Cloudflare(clientOptions);
 
 	const tokenStatus = (await cloudflare.user.tokens.verify()).status;
-
 	if (tokenStatus !== 'active') {
 		throw new HttpError(401, 'This API Token is ' + tokenStatus);
 	}
 
 	const zones = (await cloudflare.zones.list()).result;
-	const zone = zones.pop();
-
 	if (zones.length > 1) {
 		throw new HttpError(400, 'More than one zone was found! You must supply an API Token scoped to a single zone.');
-	} else if (zone === undefined) {
+	} else if (zones.length === 0) {
 		throw new HttpError(400, 'No zones found! You must supply an API Token scoped to a single zone.');
 	}
+
+	const zone = zones[0];
 
 	const records = (
 		await cloudflare.dns.records.list({
@@ -79,15 +78,14 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 			type: newRecord.type,
 		})
 	).result;
-	const oldRecord = records.pop();
 
 	if (records.length > 1) {
 		throw new HttpError(400, 'More than one matching record found!');
-	} else if (oldRecord === undefined || oldRecord.id === undefined) {
+	} else if (records.length === 0 || records[0].id === undefined) {
 		throw new HttpError(400, 'No record found! You must first manually create the record.');
 	}
 
-	await cloudflare.dns.records.update(oldRecord.id, {
+	await cloudflare.dns.records.update(records[0].id, {
 		content: newRecord.content,
 		zone_id: zone.id,
 		name: newRecord.name,
@@ -100,9 +98,12 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 export default {
 	async fetch(request): Promise<Response> {
 		try {
+			// Construct client options and DNS record
 			const clientOptions = constructClientOptions(request);
 			const record = constructDNSRecord(request);
-			return update(clientOptions, record);
+
+			// Run the update function
+			return await update(clientOptions, record);
 		} catch (error) {
 			if (error instanceof HttpError) {
 				return new Response(error.message, { status: error.statusCode });
