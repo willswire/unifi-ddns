@@ -44,6 +44,7 @@ describe('UniFi DDNS Worker', () => {
 	it('responds with 401 when API token is invalid', async () => {
 		const response = await SELF.fetch('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
 			headers: {
+				// CodeQL [js/hardcoded-credentials] Suppressing hardcoded credential warning for test
 				Authorization: 'Basic invalidtoken',
 			},
 		});
