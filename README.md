@@ -34,13 +34,10 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
 ### 2. **Generate a Cloudflare API Token**
 
 1. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
-2. Navigate to:
-   - **User Token:** Profile > API Tokens
-   - **Account Token (Recommended):** Account > Manage Account > API Tokens
+2. Navigate to **Profile > API Tokens**
 3. Create a token using the **Edit zone DNS** template.
 4. Scope the token to **one** specific zone.
 5. Save the token securely.
-
 
 ---
 
@@ -52,7 +49,7 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
    - **Service:** `custom`
    - **Hostname:** `subdomain.example.com` or `example.com`
    - **Username:** Cloudflare Account Email Address (e.g., `you@example.com`)
-   - **Password:** Cloudflare API Token
+   - **Password:** Cloudflare User API Token *(not an Account API Token)*
    - **Server:** `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h`
      *(Omit `https://`)*
 
