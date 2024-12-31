@@ -11,8 +11,6 @@ A Cloudflare Worker script that enables UniFi devices (e.g., UDM-Pro, USG) to dy
 
 UniFi devices do not natively support Cloudflare as a DDNS provider. This script bridges that gap, allowing your UniFi device to keep your DNS records updated with your public IP address.
 
----
-
 ## 🚀 **Setup Overview**
 
 ### 1. **Deploy the Cloudflare Worker**
@@ -34,8 +32,6 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
    ```
 4. Note the `*.workers.dev` route.
 
----
-
 ### 2. **Generate a Cloudflare API Token**
 
 1. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
@@ -43,8 +39,6 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
 3. Create a token using the **Edit zone DNS** template.
 4. Scope the token to **one** specific zone.
 5. Save the token securely.
-
----
 
 ### 3. **Configure UniFi OS**
 
@@ -58,33 +52,6 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
    - **Server:** `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h`
      *(Omit `https://`)*
 
----
-
 ## 🛠️ **Testing & Troubleshooting**
 
-### **UDM-Pro Testing**
-1. SSH into your UDM-Pro.
-2. Run:
-   ```sh
-   ps aux | grep inadyn
-   inadyn -n -1 --force -f /run/ddns-eth4-inadyn.conf
-   ```
-3. Check `/var/log/messages` for errors.
-
-### **USG Testing**
-1. SSH into your USG.
-2. Run:
-   ```sh
-   sudo ddclient -daemon=0 -verbose -noquiet -debug -file /etc/ddclient/ddclient_eth0.conf
-   ```
-3. Look for `SUCCESS` in the output.
-
----
-
-## ⚠️ **Important Notes**
-
-- Updates occur approximately every two minutes. You can tail the worker logs to validate updates from your UniFi device.
-- For **subdomains** (`sub.example.com`), manually create an A record in Cloudflare first.
-- Remove `https://` from the **Server** field.
-- **Wildcard domains:** Use `*.example.com` in the **Hostname** field.
-- UniFi OS may require recreating DDNS entries instead of editing them.
+Using this script with various Ubiquiti devices and different UniFi software versions can introduce unique challenges. If you encounter issues, start by checking the FAQ in `/docs/faq.md`. If you don’t find a solution, you can ask a question on the [discussions page](https://github.com/willswire/unifi-ddns/discussions/new?category=q-a). If the problem persists, please raise an issue [here](https://github.com/willswire/unifi-ddns/issues).
