@@ -1,0 +1,32 @@
+name: 'Code Coverage'
+
+on:
+  pull_request:
+    branches: ['main']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Required to checkout the code
+      contents: read
+      # Required to put a comment into the pull-request
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 'Install Node'
+        uses: actions/setup-node@v4
+
+      - name: 'Install Dependencies'
+        run: npm ci
+
+      - name: 'Code Coverage'
+        run: npx vitest run --coverage
+
+      - name: 'Report Coverage'
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@5a78cb16e761204097ad8a39369ea5d0ff7c8a5d # v2
