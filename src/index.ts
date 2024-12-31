@@ -92,7 +92,7 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 		type: newRecord.type,
 	});
 
-	return new Response(null, { status: 200 });
+	return new Response('OK', { status: 200 });
 }
 
 export default {
