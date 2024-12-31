@@ -4,6 +4,8 @@ export default defineWorkersConfig({
 	test: {
 		coverage: {
 			provider: 'istanbul',
+			reporter: ['text', 'json-summary', 'json'],
+			reportOnFailure: true,
 		},
 		poolOptions: {
 			workers: {

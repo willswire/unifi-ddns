@@ -1,4 +1,9 @@
-# Cloudflare DDNS for UniFi OS
+# 🌩️ Cloudflare DDNS for UniFi OS
+
+[![CodeQL](https://github.com/willswire/unifi-ddns/actions/workflows/codeql.yml/badge.svg)](https://github.com/willswire/unifi-ddns/actions/workflows/codeql.yml)
+[![Code Coverage](https://github.com/willswire/unifi-ddns/actions/workflows/coverage.yml/badge.svg)](https://github.com/willswire/unifi-ddns/actions/workflows/coverage.yml)
+[![Deploy](https://github.com/willswire/unifi-ddns/actions/workflows/deploy.yml/badge.svg)](https://github.com/willswire/unifi-ddns/actions/workflows/deploy.yml)
+
 
 A Cloudflare Worker script that enables UniFi devices (e.g., UDM-Pro, USG) to dynamically update DNS A/AAAA records on Cloudflare.
 
