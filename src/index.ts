@@ -84,12 +84,17 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 	} else if (records.length === 0 || records[0].id === undefined) {
 		throw new HttpError(400, 'No record found! You must first manually create the record.');
 	}
-
+	
+	// Extract the current `proxied` status
+	const currentRecord = records[0];
+	const proxied = currentRecord.proxied ?? false; // Default to `false` if `proxied` is undefined
+	
 	await cloudflare.dns.records.update(records[0].id, {
 		content: newRecord.content,
 		zone_id: zone.id,
 		name: newRecord.name,
 		type: newRecord.type,
+		proxied, // Pass the existing "proxied" status
 	});
 
 	return new Response('OK', { status: 200 });
