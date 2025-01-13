@@ -15,7 +15,6 @@ class HttpError extends Error {
 function constructClientOptions(request: Request): ClientOptions {
 	const authorization = request.headers.get('Authorization');
 	if (!authorization) {
-		console.log('Request missing API token')
 		throw new HttpError(401, 'API token missing.');
 	}
 
@@ -24,7 +23,6 @@ function constructClientOptions(request: Request): ClientOptions {
 	const index = decoded.indexOf(':');
 
 	if (index === -1 || /[\0-\x1F\x7F]/.test(decoded)) {
-		console.log('Invalid API token')
 		throw new HttpError(401, 'Invalid API key or token.');
 	}
 
@@ -41,12 +39,10 @@ function constructDNSRecord(request: Request): AddressableRecord {
 	const hostname = params.get('hostname');
 
 	if (ip === null || ip === undefined) {
-		console.log('Request missing ip parameter')
 		throw new HttpError(422, 'The "ip" parameter is required and cannot be empty.');
 	}
 
 	if (hostname === null || hostname === undefined) {
-		console.log('Request missing hostname parameter')
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
 	}
 
@@ -63,16 +59,13 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 
 	const tokenStatus = (await cloudflare.user.tokens.verify()).status;
 	if (tokenStatus !== 'active') {
-		console.log("The API token is" + tokenStatus)
 		throw new HttpError(401, 'This API Token is ' + tokenStatus);
 	}
 
 	const zones = (await cloudflare.zones.list()).result;
 	if (zones.length > 1) {
-		console.log('More than one zone was found! You must supply an API Token scoped to a single zone.')
 		throw new HttpError(400, 'More than one zone was found! You must supply an API Token scoped to a single zone.');
 	} else if (zones.length === 0) {
-		console.log('No zones found! You must supply an API Token scoped to a single zone.')
 		throw new HttpError(400, 'No zones found! You must supply an API Token scoped to a single zone.');
 	}
 
@@ -87,10 +80,8 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 	).result;
 
 	if (records.length > 1) {
-		console.log('More than one matching record found!')
 		throw new HttpError(400, 'More than one matching record found!');
 	} else if (records.length === 0 || records[0].id === undefined) {
-		console.log('No record found! You must first manually create the record.')
 		throw new HttpError(400, 'No record found! You must first manually create the record.');
 	}
 
@@ -106,13 +97,20 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 		proxied, // Pass the existing "proxied" status
 	});
 
-	console.log(' DNS record for ' + newRecord.name + '(' + newRecord.type +') updated successfully to ' + newRecord.content);
+	console.log('DNS record for ' + newRecord.name + '(' + newRecord.type +') updated successfully to ' + newRecord.content);
 
 	return new Response('OK', { status: 200 });
 }
 
 export default {
 	async fetch(request): Promise<Response> {
+		const url = new URL(request.url);
+		console.log('Requester IP: ' + request.headers.get('CF-Connecting-IP'));
+		console.log(request.method + ': ' + request.url);
+		if (request.body) {
+			console.log('Body: ' + await request.text());
+		}
+
 		try {
 			// Construct client options and DNS record
 			const clientOptions = constructClientOptions(request);
