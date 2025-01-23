@@ -74,7 +74,7 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 	const records = (
 		await cloudflare.dns.records.list({
 			zone_id: zone.id,
-			name: newRecord.name,
+			name: newRecord.name as any,
 			type: newRecord.type,
 		})
 	).result;
@@ -92,12 +92,12 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 	await cloudflare.dns.records.update(records[0].id, {
 		content: newRecord.content,
 		zone_id: zone.id,
-		name: newRecord.name,
+		name: newRecord.name as any,
 		type: newRecord.type,
 		proxied, // Pass the existing "proxied" status
 	});
 
-	console.log('DNS record for ' + newRecord.name + '(' + newRecord.type +') updated successfully to ' + newRecord.content);
+	console.log('DNS record for ' + newRecord.name + '(' + newRecord.type + ') updated successfully to ' + newRecord.content);
 
 	return new Response('OK', { status: 200 });
 }
@@ -107,9 +107,7 @@ export default {
 		const url = new URL(request.url);
 		console.log('Requester IP: ' + request.headers.get('CF-Connecting-IP'));
 		console.log(request.method + ': ' + request.url);
-		if (request.body) {
-			console.log('Body: ' + await request.text());
-		}
+		console.log('Body: ' + (await request.text()));
 
 		try {
 			// Construct client options and DNS record
