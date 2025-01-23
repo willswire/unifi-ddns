@@ -85,9 +85,10 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 		throw new HttpError(400, 'No record found! You must first manually create the record.');
 	}
 
-	// Extract the current `proxied` status
+	// Extract current properties
 	const currentRecord = records[0] as AddressableRecord;
 	const proxied = currentRecord.proxied ?? false; // Default to `false` if `proxied` is undefined
+	const comment = currentRecord.comment;
 
 	await cloudflare.dns.records.update(records[0].id, {
 		content: newRecord.content,
@@ -95,6 +96,7 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 		name: newRecord.name as any,
 		type: newRecord.type,
 		proxied, // Pass the existing "proxied" status
+		comment, // Pass the existing "comment"
 	});
 
 	console.log('DNS record for ' + newRecord.name + '(' + newRecord.type + ') updated successfully to ' + newRecord.content);
