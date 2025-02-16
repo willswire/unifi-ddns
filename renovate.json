@@ -1,0 +1,10 @@
+{
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchPaths": ["package.json"],
+      "groupName": "Node Dependencies"
+    }
+  ]
+}
