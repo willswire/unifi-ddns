@@ -20,6 +20,6 @@
 	},
 	"dependencies": {
 		"@cloudflare/types": "^6.29.1",
-		"cloudflare": "^4.0.0"
+		"cloudflare": "^4.1.0"
 	}
 }
