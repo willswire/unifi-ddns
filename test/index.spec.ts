@@ -1,6 +1,5 @@
 import { SELF } from 'cloudflare:test';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Cloudflare } from 'cloudflare';
 
 // Mock functions
 const mockVerify = vi.fn();
