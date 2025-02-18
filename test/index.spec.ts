@@ -73,7 +73,18 @@ describe('UniFi DDNS Worker', () => {
 			},
 		});
 		expect(response.status).toBe(422);
-		expect(await response.text()).toBe('The "ip" parameter is required and cannot be empty.');
+		expect(await response.text()).toBe('The "ip" parameter is required and cannot be empty. Specify ip=auto to use the client IP.');
+	});
+
+	it('responds with 500 when IP is set to auto and is missing', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		const response = await SELF.fetch('http://example.com/update?hostname=home.example.com&ip=auto', {
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		});
+		expect(response.status).toBe(500);
+		expect(await response.text()).toBe('Request asked for ip=auto but client IP address cannot be determined.');
 	});
 
 	it('responds with 422 when hostname is missing', async () => {
@@ -96,6 +107,21 @@ describe('UniFi DDNS Worker', () => {
 		const response = await SELF.fetch('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
 			headers: {
 				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		});
+		expect(response.status).toBe(200);
+	});
+
+	it('responds with 200 on valid update when IP is set to auto', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({ result: [{ id: 'record-id', name: 'home.example.com', type: 'A' }] });
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await SELF.fetch('http://example.com/update?ip=auto&hostname=home.example.com', {
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				'CF-Connecting-IP': '192.0.2.1',
 			},
 		});
 		expect(response.status).toBe(200);

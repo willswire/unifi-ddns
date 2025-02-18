@@ -40,12 +40,12 @@ function constructDNSRecord(request: Request): AddressableRecord {
 
 	if (ip === null || ip === undefined) {
 		throw new HttpError(422, 'The "ip" parameter is required and cannot be empty. Specify ip=auto to use the client IP.');
-	} else if (ip == "auto") {
-                ip = request.headers.get('CF-Connecting-IP')
-                if (ip == null) {
-		        throw new HttpError(500, 'Request asked for ip=auto but client IP address cannot be determined.');
-                }
-        }
+	} else if (ip == 'auto') {
+		ip = request.headers.get('CF-Connecting-IP');
+		if (ip === null) {
+			throw new HttpError(500, 'Request asked for ip=auto but client IP address cannot be determined.');
+		}
+	}
 
 	if (hostname === null || hostname === undefined) {
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
