@@ -51,10 +51,17 @@ function constructDNSRecord(request: Request): AddressableRecord {
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
 	}
 
+	const isIPv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+	const isIPv6 = ip.includes(':') && /^[0-9a-fA-F:]+$/.test(ip);
+
+	if (!isIPv4 && !isIPv6) {
+		throw new HttpError(422, `The provided IP "${ip}" is not a valid IPv4 or IPv6 address.`);
+	}
+
 	return {
 		content: ip,
 		name: hostname,
-		type: ip.includes('.') ? 'A' : 'AAAA',
+		type: isIPv4 ? 'A' : 'AAAA',
 		ttl: 1,
 	};
 }
