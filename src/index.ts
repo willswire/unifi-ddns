@@ -111,7 +111,6 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 
 export default {
 	async fetch(request): Promise<Response> {
-		const url = new URL(request.url);
 		console.log('Requester IP: ' + request.headers.get('CF-Connecting-IP'));
 		console.log(request.method + ': ' + request.url);
 		console.log('Body: ' + (await request.text()));
