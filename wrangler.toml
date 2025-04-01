@@ -9,7 +9,6 @@ compatibility_flags = ["nodejs_compat"]
 # Configuration: https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs
 [observability]
 enabled = true
-logs.enabled = true
 
 # Automatically place your workloads in an optimal location to minimize latency.
 # Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
