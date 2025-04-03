@@ -27,6 +27,7 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
 2. Install [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/).
 3. Run:
    ```sh
+   npm i
    wrangler login
    wrangler deploy
    ```
