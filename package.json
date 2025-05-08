@@ -19,7 +19,7 @@
 		"wrangler": "4.14.3"
 	},
 	"dependencies": {
-		"@cloudflare/types": "6.29.1",
+		"@cloudflare/types": "7.0.0",
 		"cloudflare": "4.2.0"
 	}
 }
