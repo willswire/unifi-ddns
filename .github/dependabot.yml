@@ -1,11 +1,26 @@
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     groups:
       security:
         applies-to: security-updates
         patterns:
           - "*"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "actions"
+    rebase-strategy: "auto"
