@@ -12,7 +12,6 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
-      - "npm"
     rebase-strategy: "auto"
 
   - package-ecosystem: "github-actions"
@@ -22,5 +21,4 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
-      - "actions"
     rebase-strategy: "auto"
