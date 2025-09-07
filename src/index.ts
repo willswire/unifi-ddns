@@ -110,7 +110,7 @@ async function updateHostnames(clientOptions: ClientOptions, newRecords: Address
 
 		// Update the DNS record
 		const { record, zoneId } = matches[0];
-		const { proxied = false, comment } = record;
+		const { proxied = false, comment, ttl = 1 } = record;
 		await cloudflare.dns.records.update(record.id, {
 			content: newRecord.content,
 			zone_id: zoneId,
@@ -118,6 +118,7 @@ async function updateHostnames(clientOptions: ClientOptions, newRecords: Address
 			type: newRecord.type,
 			proxied,
 			comment,
+			ttl,
 		});
 
 		const successMsg = `DNS record for '${newRecord.name}' ('${newRecord.type}') updated to '${newRecord.content}'`;
