@@ -81,11 +81,29 @@ async function updateHostnames(clientOptions: ClientOptions, newRecords: Address
 		throw new HttpError(401, `API Token status: '${tokenStatus}'`);
 	}
 
+	// Check if IP has changed from last known IP
+	const currentIp = newRecords[0]?.content; // All records have the same IP
+	let lastKnownIp: string | null = null;
+	try {
+		lastKnownIp = await env.DDNS_KV.get('last_ip');
+	} catch (error) {
+		console.error('Failed to get last known IP from KV:', error);
+		// Continue with the update if KV access fails
+	}
+	
+	const ipChanged = lastKnownIp !== currentIp;
+	if (!ipChanged) {
+		console.log(`IP address ${currentIp} hasn't changed from last known value. Skipping DNS update and notification.`);
+		return new Response('OK. No IP change detected.', { status: 200 });
+	}
+
 	// Expect exactly one zone
 	const { result: zones } = await cloudflare.zones.list();
 	if (zones.length === 0) {
 		throw new HttpError(400, 'No zones available in API Token.');
 	}
+
+	const updateMessages: string[] = [];
 
 	for (const newRecord of newRecords) {
 		// Retrieve matching DNS record
@@ -123,8 +141,19 @@ async function updateHostnames(clientOptions: ClientOptions, newRecords: Address
 
 		const successMsg = `DNS record for '${newRecord.name}' ('${newRecord.type}') updated to '${newRecord.content}'`;
 		console.log(successMsg);
-		await pushNtfy(successMsg, env);
+		updateMessages.push(successMsg);
 	}
+
+	// Store the new IP address as the last known IP
+	try {
+		await env.DDNS_KV.put('last_ip', currentIp);
+	} catch (error) {
+		console.error('Failed to store last known IP to KV:', error);
+		// Continue even if KV storage fails
+	}
+
+	// Send grouped notification for all updates
+	await pushNtfy(updateMessages, env);
 
 	return new Response('OK', { status: 200 });
 }

@@ -11,15 +11,14 @@
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "0.8.70",
-		"@cloudflare/workers-types": "4.20250906.0",
+		"@cloudflare/vitest-pool-workers": "0.9.0",
 		"@vitest/coverage-istanbul": "3.2.4",
 		"typescript": "5.9.2",
 		"vitest": "3.2.4",
-		"wrangler": "4.34.0"
+		"wrangler": "4.36.0"
 	},
 	"dependencies": {
 		"@cloudflare/types": "7.0.0",
-		"cloudflare": "4.5.0"
+		"cloudflare": "5.1.0"
 	}
 }

@@ -1,0 +1,29 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ddns",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-09-01",
+	"compatibility_flags": ["nodejs_compat"],
+
+	// KV Namespace for storing last known IP address
+	"kv_namespaces": [
+		{
+			"binding": "DDNS_KV",
+			"id": "ddns_kv_namespace",
+			"preview_id": "ddns_kv_namespace_preview"
+		}
+	],
+
+	// Workers Logs
+	// Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
+	// Configuration: https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs
+	"observability": {
+		"enabled": true
+	},
+
+	// Automatically place your workloads in an optimal location to minimize latency.
+	// Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	"placement": {
+		"mode": "smart"
+	}
+}
