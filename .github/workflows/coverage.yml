@@ -18,15 +18,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 'Install Node'
+      - name: Setup Node.js
         uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-      - name: 'Install Dependencies'
+      - name: Install dependencies
         run: npm ci
 
-      - name: 'Code Coverage'
+      - name: Run tests with coverage
         run: npx vitest run --coverage
 
-      - name: 'Report Coverage'
+      - name: Report coverage
         if: always()
-        uses: davelosert/vitest-coverage-report-action@5a78cb16e761204097ad8a39369ea5d0ff7c8a5d # v2
+        uses: davelosert/vitest-coverage-report-action@v2.8.3
+        with:
+          name: 'Code Coverage Report'
+          file-coverage-mode: changes
