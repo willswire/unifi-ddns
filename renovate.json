@@ -1,0 +1,14 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"groupName": "all dependencies",
+	"groupSlug": "all",
+	"packageRules": [
+		{
+			"groupName": "all dependencies",
+			"groupSlug": "all",
+			"matchPackageNames": ["*"]
+		}
+	],
+	"separateMajorMinor": false
+}
