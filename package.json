@@ -11,15 +11,15 @@
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "0.7.4",
-		"@cloudflare/workers-types": "4.20250224.0",
-		"@vitest/coverage-istanbul": "3.0.7",
-		"typescript": "5.8.2",
-		"vitest": "3.0.7",
+		"@cloudflare/vitest-pool-workers": "0.12.18",
+		"@cloudflare/workers-types": "4.20260301.1",
+		"@vitest/coverage-istanbul": "4.0.18",
+		"typescript": "5.9.3",
+		"vitest": "4.0.18",
 		"wrangler": "3.111.0"
 	},
 	"dependencies": {
-		"@cloudflare/types": "6.29.1",
-		"cloudflare": "4.1.0"
+		"@cloudflare/types": "7.0.0",
+		"cloudflare": "5.2.0"
 	}
 }
