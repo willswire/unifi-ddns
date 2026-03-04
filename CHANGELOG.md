@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/willswire/unifi-ddns/compare/v3.2.0...v3.3.0) (2026-03-04)
+
+
+### Features
+
+* address open community discussions ([#211](https://github.com/willswire/unifi-ddns/issues/211)) ([78e6816](https://github.com/willswire/unifi-ddns/commit/78e681642657eef49ae053adfe65da580630a98e))
+
 ## [3.2.0](https://github.com/willswire/unifi-ddns/compare/v3.1.1...v3.2.0) (2026-03-04)
 
 
