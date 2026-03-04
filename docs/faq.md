@@ -83,13 +83,21 @@ For wildcard domains, use `*.example.com` in the **Hostname** field when setting
 
 ## 8. What permissions are required for the Cloudflare API token used in DDNS configuration?
 
-The User API token should have the following permissions:
+You need **two** API tokens with different scopes:
 
-- **Zone:**
-  - **Read**
-  - **DNS Edit**
+**Worker Deployment Token** (used once to deploy the worker):
+- Account — Workers KV Storage: Edit
+- Account — Workers Scripts: Edit
+- User — Memberships: Read
+- User — User Details: Read
+- Zone — Zone: Read
+- Zone — DNS: Edit
 
-Ensure the token is scoped to only one specific zone (domain) you intend to update.
+**DDNS Update Token** (used as the password in UniFi DDNS settings):
+- Zone — Zone: Read
+- Zone — DNS: Edit
+
+The DDNS update token **must** be scoped to only one specific zone (domain). If the token has access to multiple zones, the worker will return an error. This is a User API Token, not an Account API Token.
 
 ## 9. How frequently does the UniFi device update the DDNS record?
 
@@ -101,19 +109,48 @@ In dual WAN configurations, UniFi devices may not natively support configuring D
 
 Assign separate DDNS providers to each WAN interface if supported. Using the `custom` DDNS provider for one WAN connection and `dyndns` for the other is recommended.
 
-## 11. How can I use Unifi devices behind NAT?
+## 11. How can I use UniFi devices behind NAT or CGNAT?
 
-In case the Unifi router is deployed behind a NAT gateway (e.g. cable modem in router mode, 5G modem or similar), it will likely get a non-routable RFC 1918 address assigned on the external interface. In this case, the Unifi router would incorrectly update DNS to the non-routable external IP address via `ip=%i`.
+If your UniFi router is behind a NAT gateway (e.g., cable modem in router mode, 5G modem, or CGNAT from your ISP), it will have a non-routable RFC 1918 address on its external interface. Using `ip=%i` would incorrectly update DNS to this private address.
 
-To support scenarios where such a router needs to be externally available (e.g. via port forwarding on the NAT gateway), you can use `ip=auto` instead of `ip=%i` to have the Cloudflare worker automatically determine the Unifi router's NATed IP address and use it for correctly updating the hostname's `A` record.
+Use `ip=auto` instead of `ip=%i` in your server URL to have the Cloudflare Worker determine your actual public IP address from the `CF-Connecting-IP` header. This works regardless of how many layers of NAT exist between your router and the internet.
 
-## 12. What should I do if I continue to experience issues with DDNS updates?
+**Example server configuration for NAT/CGNAT:**
+`<worker-name>.<worker-subdomain>.workers.dev/update?ip=auto&hostname=%h`
+
+Note that UniFi devices check for DDNS updates on a timer (approximately every two minutes), not only when the WAN IP changes. This means `ip=auto` will work even if your router's local IP never changes — the worker will still resolve your public IP on each request.
+
+## 12. How do I troubleshoot common deployment errors?
+
+**"Missing entry-point" error:**
+Make sure you run `wrangler deploy` from inside the cloned `unifi-ddns` directory, not from a parent directory.
+
+**"Could not resolve 'cloudflare'" error:**
+Run `npm install` before `wrangler deploy`. The Cloudflare SDK must be installed locally.
+
+**"Could not read package.json" when using Click to Deploy:**
+The Click to Deploy button may fail if your Cloudflare Pages build settings are misconfigured. Try deploying via the Wrangler CLI instead (Option 2 in the README).
+
+## 13. How can I check worker logs for debugging?
+
+1. Install [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) if you haven't already.
+2. Run `wrangler tail` to stream real-time logs from your deployed worker.
+3. The worker logs the requester IP, request method/URL, and any errors encountered during the update process.
+4. You can also view logs in the Cloudflare Dashboard under **Workers & Pages > your worker > Logs**.
+
+Common error messages and their meanings:
+- **"API token missing"** — The Authorization header is not being sent. Check your UniFi DDNS username/password configuration.
+- **"No zones found"** or **"More than one zone"** — Your API token is not scoped to exactly one zone. Create a new token with the correct scope.
+- **"No record found"** — The DNS record must already exist in Cloudflare before the worker can update it. Manually create an A or AAAA record first.
+
+## 14. What should I do if I continue to experience issues with DDNS updates?
 
 - **Verify Configuration:**
   - Double-check all entries in your DDNS settings for accuracy.
 
 - **Check Logs:**
   - Review system logs on your UniFi device for error messages.
+  - Use `wrangler tail` to check Cloudflare Worker logs (see FAQ #13).
 
 - **Seek Community Assistance:**
   - Engage with the community by posting issues or questions on relevant GitHub repositories or forums.
