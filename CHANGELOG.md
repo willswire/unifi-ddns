@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.1](https://github.com/willswire/unifi-ddns/compare/v3.3.0...v3.3.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* add missing ttl to dns.records.update call ([#213](https://github.com/willswire/unifi-ddns/issues/213)) ([0fc35f7](https://github.com/willswire/unifi-ddns/commit/0fc35f7a15bbfab054043d175e144d20a2a4b59a))
+* **ci:** use project wrangler instead of outdated wrangler-action ([#215](https://github.com/willswire/unifi-ddns/issues/215)) ([04c89d0](https://github.com/willswire/unifi-ddns/commit/04c89d08f759fa6a162da62f0a0a2b1e63426841))
+
 ## [3.3.0](https://github.com/willswire/unifi-ddns/compare/v3.2.0...v3.3.0) (2026-03-04)
 
 
