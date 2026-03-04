@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 'Install Node'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
 
       - name: 'Install Dependencies'
         run: npm ci
@@ -29,4 +29,4 @@ jobs:
 
       - name: 'Report Coverage'
         if: always()
-        uses: davelosert/vitest-coverage-report-action@5a78cb16e761204097ad8a39369ea5d0ff7c8a5d # v2
+        uses: davelosert/vitest-coverage-report-action@2500dafcee7dd64f85ab689c0b83798a8359770e # v2
