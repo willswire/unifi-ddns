@@ -128,6 +128,46 @@ describe('UniFi DDNS Worker', () => {
 		expect(response.status).toBe(200);
 	});
 
+	it('responds with 200 on valid multi-hostname update', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-1', name: 'example.com', type: 'A' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-2', name: '*.example.com', type: 'A' }] });
+		mockUpdateRecord.mockResolvedValue({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=example.com,*.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(2);
+	});
+
+	it('responds with 200 on multi-hostname dual-stack update', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-a1', name: 'example.com', type: 'A' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-aaaa1', name: 'example.com', type: 'AAAA' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-a2', name: 'sub.example.com', type: 'A' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-aaaa2', name: 'sub.example.com', type: 'AAAA' }] });
+		mockUpdateRecord.mockResolvedValue({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&ip6=2001:0db8:85a3:0000:0000:8a2e:0370:7334&hostname=example.com,sub.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(4);
+	});
+
 	it('responds with 400 when multiple zones are found', async () => {
 		mockVerify.mockResolvedValueOnce({ status: 'active' });
 		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id1' }, { id: 'zone-id2' }] });

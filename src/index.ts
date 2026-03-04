@@ -52,25 +52,32 @@ function constructDNSRecords(request: Request): AddressableRecord[] {
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
 	}
 
-	const records: AddressableRecord[] = [
-		{
+	const hostnames = hostname.split(',').map((h) => h.trim()).filter(Boolean);
+	if (hostnames.length === 0) {
+		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
+	}
+
+	const records: AddressableRecord[] = [];
+
+	for (const name of hostnames) {
+		records.push({
 			content: ip,
-			name: hostname,
+			name,
 			type: ip.includes('.') ? 'A' : 'AAAA',
 			ttl: 1,
-		},
-	];
-
-	if (ip6 !== null && ip6 !== undefined) {
-		if (!ip6.includes(':')) {
-			throw new HttpError(422, 'The "ip6" parameter must be a valid IPv6 address.');
-		}
-		records.push({
-			content: ip6,
-			name: hostname,
-			type: 'AAAA',
-			ttl: 1,
 		});
+
+		if (ip6 !== null && ip6 !== undefined) {
+			if (!ip6.includes(':')) {
+				throw new HttpError(422, 'The "ip6" parameter must be a valid IPv6 address.');
+			}
+			records.push({
+				content: ip6,
+				name,
+				type: 'AAAA',
+				ttl: 1,
+			});
+		}
 	}
 
 	return records;
