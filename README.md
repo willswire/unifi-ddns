@@ -9,7 +9,9 @@ A Cloudflare Worker script that enables UniFi devices (e.g., UDM-Pro, USG) to dy
 
 ## Why Use This?
 
-UniFi devices do not natively support Cloudflare as a DDNS provider. This script bridges that gap, allowing your UniFi device to keep your DNS records updated with your public IP address.
+> **Note:** UniFi Network Application 9.1.92+ includes native Cloudflare DDNS support. If your gateway runs this firmware or newer, you may not need this worker. However, the native implementation does not support multi-hostname updates, dual-stack (IPv4 + IPv6), or preserving proxy status — this worker remains useful for those use cases and for older firmware.
+
+UniFi devices running older firmware do not natively support Cloudflare as a DDNS provider. This script bridges that gap, allowing your UniFi device to keep your DNS records updated with your public IP address.
 
 ## 🚀 **Setup Overview**
 
