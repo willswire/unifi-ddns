@@ -32,10 +32,11 @@ function constructClientOptions(request: Request): ClientOptions {
 	};
 }
 
-function constructDNSRecord(request: Request): AddressableRecord {
+function constructDNSRecords(request: Request): AddressableRecord[] {
 	const url = new URL(request.url);
 	const params = url.searchParams;
 	let ip = params.get('ip') || params.get('myip');
+	const ip6 = params.get('ip6');
 	const hostname = params.get('hostname');
 
 	if (ip === null || ip === undefined) {
@@ -51,15 +52,31 @@ function constructDNSRecord(request: Request): AddressableRecord {
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
 	}
 
-	return {
-		content: ip,
-		name: hostname,
-		type: ip.includes('.') ? 'A' : 'AAAA',
-		ttl: 1,
-	};
+	const records: AddressableRecord[] = [
+		{
+			content: ip,
+			name: hostname,
+			type: ip.includes('.') ? 'A' : 'AAAA',
+			ttl: 1,
+		},
+	];
+
+	if (ip6 !== null && ip6 !== undefined) {
+		if (!ip6.includes(':')) {
+			throw new HttpError(422, 'The "ip6" parameter must be a valid IPv6 address.');
+		}
+		records.push({
+			content: ip6,
+			name: hostname,
+			type: 'AAAA',
+			ttl: 1,
+		});
+	}
+
+	return records;
 }
 
-async function update(clientOptions: ClientOptions, newRecord: AddressableRecord): Promise<Response> {
+async function update(clientOptions: ClientOptions, newRecords: AddressableRecord[]): Promise<Response> {
 	const cloudflare = new Cloudflare(clientOptions);
 
 	const tokenStatus = (await cloudflare.user.tokens.verify()).status;
@@ -76,35 +93,37 @@ async function update(clientOptions: ClientOptions, newRecord: AddressableRecord
 
 	const zone = zones[0];
 
-	const records = (
-		await cloudflare.dns.records.list({
+	for (const newRecord of newRecords) {
+		const records = (
+			await cloudflare.dns.records.list({
+				zone_id: zone.id,
+				name: newRecord.name as any,
+				type: newRecord.type,
+			})
+		).result;
+
+		if (records.length > 1) {
+			throw new HttpError(400, 'More than one matching record found!');
+		} else if (records.length === 0 || records[0].id === undefined) {
+			throw new HttpError(400, 'No record found! You must first manually create the record.');
+		}
+
+		// Extract current properties
+		const currentRecord = records[0] as AddressableRecord;
+		const proxied = currentRecord.proxied ?? false; // Default to `false` if `proxied` is undefined
+		const comment = currentRecord.comment;
+
+		await cloudflare.dns.records.update(records[0].id, {
+			content: newRecord.content,
 			zone_id: zone.id,
 			name: newRecord.name as any,
 			type: newRecord.type,
-		})
-	).result;
+			proxied, // Pass the existing "proxied" status
+			comment, // Pass the existing "comment"
+		});
 
-	if (records.length > 1) {
-		throw new HttpError(400, 'More than one matching record found!');
-	} else if (records.length === 0 || records[0].id === undefined) {
-		throw new HttpError(400, 'No record found! You must first manually create the record.');
+		console.log('DNS record for ' + newRecord.name + '(' + newRecord.type + ') updated successfully to ' + newRecord.content);
 	}
-
-	// Extract current properties
-	const currentRecord = records[0] as AddressableRecord;
-	const proxied = currentRecord.proxied ?? false; // Default to `false` if `proxied` is undefined
-	const comment = currentRecord.comment;
-
-	await cloudflare.dns.records.update(records[0].id, {
-		content: newRecord.content,
-		zone_id: zone.id,
-		name: newRecord.name as any,
-		type: newRecord.type,
-		proxied, // Pass the existing "proxied" status
-		comment, // Pass the existing "comment"
-	});
-
-	console.log('DNS record for ' + newRecord.name + '(' + newRecord.type + ') updated successfully to ' + newRecord.content);
 
 	return new Response('OK', { status: 200 });
 }
@@ -116,12 +135,12 @@ export default {
 		console.log('Body: ' + (await request.text()));
 
 		try {
-			// Construct client options and DNS record
+			// Construct client options and DNS records
 			const clientOptions = constructClientOptions(request);
-			const record = constructDNSRecord(request);
+			const records = constructDNSRecords(request);
 
 			// Run the update function
-			return await update(clientOptions, record);
+			return await update(clientOptions, records);
 		} catch (error) {
 			if (error instanceof HttpError) {
 				console.log('Error updating DNS record: ' + error.message);

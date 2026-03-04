@@ -219,4 +219,35 @@ describe('UniFi DDNS Worker', () => {
 		}));
 		expect(response.status).toBe(200);
 	});
+
+	it('responds with 200 on valid dual-stack update with ip6 parameter', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-a', name: 'home.example.com', type: 'A' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-aaaa', name: 'home.example.com', type: 'AAAA' }] });
+		mockUpdateRecord.mockResolvedValue({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&ip6=2001:0db8:85a3:0000:0000:8a2e:0370:7334&hostname=home.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(2);
+	});
+
+	it('responds with 422 when ip6 parameter is not a valid IPv6 address', async () => {
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&ip6=not-an-ipv6&hostname=home.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+		expect(response.status).toBe(422);
+		expect(await response.text()).toBe('The "ip6" parameter must be a valid IPv6 address.');
+	});
 });
