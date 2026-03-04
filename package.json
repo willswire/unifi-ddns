@@ -15,7 +15,7 @@
 		"@vitest/coverage-v8": "4.0.18",
 		"typescript": "5.9.3",
 		"vitest": "4.0.18",
-		"wrangler": "3.111.0"
+		"wrangler": "3.114.17"
 	},
 	"dependencies": {
 		"@cloudflare/types": "7.0.0",
