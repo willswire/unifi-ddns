@@ -125,6 +125,7 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 			zone_id: zone.id,
 			name: newRecord.name as any,
 			type: newRecord.type,
+			ttl: newRecord.ttl,
 			proxied, // Pass the existing "proxied" status
 			comment, // Pass the existing "comment"
 		});
