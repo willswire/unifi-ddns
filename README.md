@@ -55,6 +55,16 @@ UniFi devices running older firmware do not natively support Cloudflare as a DDN
    - **Server:** `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h`
      *(Omit `https://`)*
 
+#### Optional: pin Cloudflare proxy (orange cloud) state on every update
+
+By default, the worker preserves the current **Proxy status** of the record. If you rely on Cloudflare's orange cloud (for example to terminate SSL so a browser can reach a plain HTTP service behind your UniFi gateway), append `&proxied=true` to the server URL:
+
+```
+<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h&proxied=true
+```
+
+With `proxied=true`, the worker always writes the record with the Cloudflare proxy enabled even if something upstream (or a manual change in the dashboard) flipped it off. Conversely, `proxied=false` pins the record as DNS only on every update. Accepted values are case insensitive (`true` or `1` enable, `false` or `0` disable). Omitting the parameter, or passing any other value, leaves the existing proxy state untouched, so existing users are unaffected.
+
 ## 🛠️ **Testing & Troubleshooting**
 
 Using this script with various Ubiquiti devices and different UniFi software versions can introduce unique challenges. If you encounter issues, start by checking the FAQ in `/docs/faq.md`. If you don’t find a solution, you can ask a question on the [discussions page](https://github.com/willswire/unifi-ddns/discussions/new?category=q-a). If the problem persists, please raise an issue [here](https://github.com/willswire/unifi-ddns/issues).

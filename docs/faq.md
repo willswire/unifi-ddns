@@ -143,7 +143,19 @@ Common error messages and their meanings:
 - **"No zones found"** or **"More than one zone"** — Your API token is not scoped to exactly one zone. Create a new token with the correct scope.
 - **"No record found"** — The DNS record must already exist in Cloudflare before the worker can update it. Manually create an A or AAAA record first.
 
-## 14. What should I do if I continue to experience issues with DDNS updates?
+## 14. How do I pin the Cloudflare proxy (orange cloud) state on every DDNS update?
+
+By default, the worker preserves whatever **Proxy status** the record currently has, so if you leave the orange cloud on in the dashboard it stays on. Some setups (for example the native UniFi Cloudflare DDNS client) can flip the record back to DNS only, which breaks anything that relies on Cloudflare terminating TLS for a plain HTTP origin.
+
+To pin the proxy on from the worker side, append `proxied=true` to the server URL:
+
+```
+<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h&proxied=true
+```
+
+With `proxied=true` the worker always writes the record with the Cloudflare proxy enabled. Conversely, `proxied=false` pins the record as DNS only on every update. Accepted values are case insensitive (`true` or `1` enable, `false` or `0` disable). Omitting the parameter, or passing any other value, leaves the existing proxy state untouched, so existing setups are unaffected.
+
+## 15. What should I do if I continue to experience issues with DDNS updates?
 
 - **Verify Configuration:**
   - Double-check all entries in your DDNS settings for accuracy.

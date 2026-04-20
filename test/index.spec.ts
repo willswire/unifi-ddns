@@ -290,4 +290,172 @@ describe('UniFi DDNS Worker', () => {
 		expect(response.status).toBe(422);
 		expect(await response.text()).toBe('The "ip6" parameter must be a valid IPv6 address.');
 	});
+
+	// The suite level beforeEach calls vi.clearAllMocks(), which clears call history but
+	// not mock implementations (including mockResolvedValue defaults and leftover
+	// mockResolvedValueOnce queues set by earlier tests). The specs below exercise the
+	// proxied query param behaviour and must start from a fully clean mock slate, so they
+	// call resetCfMocks() explicitly to avoid disturbing the mock setup patterns the
+	// existing tests rely on.
+	function resetCfMocks() {
+		mockVerify.mockReset();
+		mockListZones.mockReset();
+		mockListRecords.mockReset();
+		mockUpdateRecord.mockReset();
+	}
+
+	it('preserves existing proxied status when proxied query param is absent', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({
+			result: [{ id: 'record-id', name: 'home.example.com', type: 'A', proxied: true }],
+		});
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		}));
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ proxied: true }),
+		);
+	});
+
+	it('forces proxied=true when proxied=true is passed, overriding an existing unproxied record', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({
+			result: [{ id: 'record-id', name: 'home.example.com', type: 'A', proxied: false }],
+		});
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com&proxied=true', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ proxied: true }),
+		);
+	});
+
+	it('accepts proxied=1 as an alias for proxied=true', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({
+			result: [{ id: 'record-id', name: 'home.example.com', type: 'A', proxied: false }],
+		});
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com&proxied=1', {
+				headers: { Authorization: 'Basic ' + btoa('email@example.com:validtoken') },
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ proxied: true }),
+		);
+	});
+
+	it('applies proxied=true override to every record in a comma-separated multi-hostname update', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-1', name: 'example.com', type: 'A', proxied: false }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-2', name: '*.example.com', type: 'A', proxied: false }] });
+		mockUpdateRecord.mockResolvedValue({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=example.com,*.example.com&proxied=true', {
+				headers: { Authorization: 'Basic ' + btoa('email@example.com:validtoken') },
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(2);
+		expect(mockUpdateRecord).toHaveBeenNthCalledWith(1, 'record-id-1', expect.objectContaining({ proxied: true }));
+		expect(mockUpdateRecord).toHaveBeenNthCalledWith(2, 'record-id-2', expect.objectContaining({ proxied: true }));
+	});
+
+	it('forces proxied=false when proxied=false is passed, overriding an existing proxied record', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({
+			result: [{ id: 'record-id', name: 'home.example.com', type: 'A', proxied: true }],
+		});
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com&proxied=false', {
+				headers: { Authorization: 'Basic ' + btoa('email@example.com:validtoken') },
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ proxied: false }),
+		);
+	});
+
+	it('accepts proxied=0 as an alias for proxied=false', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({
+			result: [{ id: 'record-id', name: 'home.example.com', type: 'A', proxied: true }],
+		});
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com&proxied=0', {
+				headers: { Authorization: 'Basic ' + btoa('email@example.com:validtoken') },
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ proxied: false }),
+		);
+	});
+
+	it('ignores unrecognized proxied values and preserves existing state', async () => {
+		resetCfMocks();
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({
+			result: [{ id: 'record-id', name: 'home.example.com', type: 'A', proxied: true }],
+		});
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com&proxied=garbage', {
+				headers: { Authorization: 'Basic ' + btoa('email@example.com:validtoken') },
+			}),
+		);
+
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ proxied: true }),
+		);
+	});
 });

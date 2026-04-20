@@ -32,6 +32,17 @@ function constructClientOptions(request: Request): ClientOptions {
 	};
 }
 
+function parseProxiedOverride(request: Request): boolean | null {
+	const raw = new URL(request.url).searchParams.get('proxied');
+	if (raw === null) {
+		return null;
+	}
+	const normalized = raw.trim().toLowerCase();
+	if (normalized === 'true' || normalized === '1') return true;
+	if (normalized === 'false' || normalized === '0') return false;
+	return null;
+}
+
 function constructDNSRecords(request: Request): AddressableRecord[] {
 	const url = new URL(request.url);
 	const params = url.searchParams;
@@ -83,7 +94,11 @@ function constructDNSRecords(request: Request): AddressableRecord[] {
 	return records;
 }
 
-async function update(clientOptions: ClientOptions, newRecords: AddressableRecord[]): Promise<Response> {
+async function update(
+	clientOptions: ClientOptions,
+	newRecords: AddressableRecord[],
+	proxiedOverride: boolean | null,
+): Promise<Response> {
 	const cloudflare = new Cloudflare(clientOptions);
 
 	const tokenStatus = (await cloudflare.user.tokens.verify()).status;
@@ -117,7 +132,11 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 
 		// Extract current properties
 		const currentRecord = records[0] as AddressableRecord;
-		const proxied = currentRecord.proxied ?? false; // Default to `false` if `proxied` is undefined
+		// Preserve the current `proxied` state unless the request explicitly overrides it.
+		// The native UniFi DDNS client does not preserve proxy status on update, so callers
+		// can pin it with `?proxied=true` (or force off with `?proxied=false`) in the
+		// configured DDNS server URL.
+		const proxied = proxiedOverride ?? currentRecord.proxied ?? false;
 		const comment = currentRecord.comment;
 
 		await cloudflare.dns.records.update(records[0].id, {
@@ -126,7 +145,7 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 			name: newRecord.name as any,
 			type: newRecord.type,
 			ttl: newRecord.ttl,
-			proxied, // Pass the existing "proxied" status
+			proxied, // Overridden value if `proxied` query param was set, otherwise the existing status
 			comment, // Pass the existing "comment"
 		});
 
@@ -146,9 +165,10 @@ export default {
 			// Construct client options and DNS records
 			const clientOptions = constructClientOptions(request);
 			const records = constructDNSRecords(request);
+			const proxiedOverride = parseProxiedOverride(request);
 
 			// Run the update function
-			return await update(clientOptions, records);
+			return await update(clientOptions, records, proxiedOverride);
 		} catch (error) {
 			if (error instanceof HttpError) {
 				console.log('Error updating DNS record: ' + error.message);
