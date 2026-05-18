@@ -29,4 +29,4 @@ jobs:
 
       - name: 'Report Coverage'
         if: always()
-        uses: davelosert/vitest-coverage-report-action@bd52af59d9cd548ea7cd405044d2458042e6d888 # v2
+        uses: davelosert/vitest-coverage-report-action@02f3c2e641286b7fa308cd3e430783103ce6103b # v2
