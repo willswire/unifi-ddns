@@ -1,0 +1,9 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		/* Tooling scripts run under bun; the bun type package brings Bun globals and node builtins. */
+		"types": ["bun"]
+	},
+	"include": ["./**/*.ts", "../eslint.config.ts", "../vitest.config.mts"],
+	"exclude": ["node_modules"]
+}

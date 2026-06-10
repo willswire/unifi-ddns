@@ -1,0 +1,20 @@
+# Git hooks, installed by `lefthook install` (runs automatically via the
+# package.json prepare script on bun install).
+
+pre-commit:
+  jobs:
+    # Order matters: lint fixes land before formatting, and both re-stage
+    # their changes via stage_fixed.
+    - name: eslint
+      glob: '*.{ts,mts}'
+      # --no-warn-ignored: staged files passed explicitly may be in the
+      # eslint ignore list (generated worker-configuration.d.ts)
+      run: bunx eslint --fix --max-warnings=0 --no-warn-ignored {staged_files}
+      stage_fixed: true
+    - name: prettier
+      glob: '*.{ts,mts,json,jsonc,md,yml,yaml}'
+      run: bunx prettier --write {staged_files}
+      stage_fixed: true
+    - name: config-clean
+      glob: 'wrangler.jsonc'
+      run: bun scripts/check-placeholders.ts

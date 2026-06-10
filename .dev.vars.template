@@ -1,3 +1,9 @@
-# Create a secret on your worker.
-# Command: npx wrangler secret put NTFY_URL
-NTFY_URL=""
+# Local worker secrets for `bun run dev`. Copy to .dev.vars (gitignored).
+# `bun run setup` can create both this file and the production secret.
+#
+# To set the secret in production manually:
+#   bun x wrangler secret put NTFY_URL
+
+# Notification service URL (optional)
+# Example: https://ntfy.sh/your-unique-topic
+NTFY_URL="https://ntfy.sh/YOUR_TOPIC_HERE"

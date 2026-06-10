@@ -1,7 +1,7 @@
 # 🌩️ Cloudflare DDNS for UniFi OS
 
 [![CodeQL](https://github.com/zachthedev/ddns/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/zachthedev/ddns/actions/workflows/github-code-scanning/codeql)
-[![Code Coverage](https://github.com/zachthedev/ddns/actions/workflows/coverage.yml/badge.svg)](https://github.com/zachthedev/ddns/actions/workflows/coverage.yml)
+[![CI](https://github.com/zachthedev/ddns/actions/workflows/ci.yml/badge.svg)](https://github.com/zachthedev/ddns/actions/workflows/ci.yml)
 [![Dependabot Updates](https://github.com/zachthedev/ddns/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/zachthedev/ddns/actions/workflows/dependabot/dependabot-updates)
 [![Deploy](https://github.com/zachthedev/ddns/actions/workflows/deploy.yml/badge.svg)](https://github.com/zachthedev/ddns/actions/workflows/deploy.yml)
 
@@ -9,11 +9,12 @@ A Cloudflare Worker script that enables UniFi devices (e.g., UDM-Pro, USG) to dy
 
 ## Notice
 
-This is a fork from [willswire](https://github.com/willswire/unifi-ddns). The changes are as follows
+This is a fork from [willswire](https://github.com/willswire/unifi-ddns) with the following enhancements:
 
-- Connect with [ntfy](https://ntfy.sh) to get alerted when WAN IP changes
-- Allows multiple zones on the API Token
-- Allows a comma-separated list of hostnames using param `hostnames`
+- **Smart notifications** - Only sends [ntfy](https://ntfy.sh) alerts when your IP actually changes
+- **API** - Returns structured JSON responses instead of plain text
+- **Multi-hostname support** - Update multiple hostnames in a single request using comma-separated values
+- **Multi-zone support** - API tokens can manage DNS records across multiple zones
 
 ## Why Use This?
 
@@ -31,17 +32,41 @@ UniFi devices do not natively support Cloudflare as a DDNS provider. This script
 2. Complete the deployment.
 3. Note the `*.workers.dev` route.
 
-#### **Option 2: Deploy with Wrangler CLI**
+#### **Option 2: Deploy with the CLI**
+
+Requires [bun](https://bun.sh).
 
 1. Clone this repository.
-2. Install [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/).
-3. Run:
+2. Install dependencies:
    ```sh
-   npm i
-   wrangler login
-   wrangler deploy
+   bun install
    ```
-4. Note the `*.workers.dev` route.
+3. Log in and run the interactive setup. It provisions the KV namespaces,
+   writes their IDs to `.env.local` (gitignored), and optionally configures
+   the ntfy notification secret:
+   ```sh
+   bun x wrangler login
+   bun run setup
+   ```
+4. Deploy:
+   ```sh
+   bun run deploy
+   ```
+5. Note the `*.workers.dev` route.
+
+#### **Option 3: Deploy on every push with GitHub Actions**
+
+Fork this repository, run setup locally once (Option 2, steps 1 to 3), then add
+these repository secrets; every push to `main` deploys automatically:
+
+- `CLOUDFLARE_API_TOKEN` - API token with Workers deploy permissions
+- `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
+- `KV_NAMESPACE_ID` - Production namespace ID (from `.env.local`)
+- `KV_NAMESPACE_PREVIEW_ID` - Preview namespace ID (from `.env.local`)
+- `NTFY_URL` - Optional ntfy topic URL for change notifications
+
+The committed `wrangler.jsonc` only ever contains placeholders; real IDs are
+injected at deploy time from the environment.
 
 ### 2. **Generate a Cloudflare API Token**
 

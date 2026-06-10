@@ -1,24 +1,42 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'bun'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+    # Wait out the publish-then-pull window before proposing new versions.
+    cooldown:
+      default-days: 3
     groups:
+      # Dependabot does not ship security updates for the bun ecosystem yet;
+      # this group activates automatically once it does.
       security:
         applies-to: security-updates
         patterns:
-          - "*"
+          - '*'
+      # One combined weekly PR for all version bumps so interdependent
+      # packages (vitest + pool-workers + vite + wrangler) move together.
+      all-dependencies:
+        applies-to: version-updates
+        patterns:
+          - '*'
     open-pull-requests-limit: 10
     labels:
-      - "dependencies"
-    rebase-strategy: "auto"
+      - 'dependencies'
+    rebase-strategy: 'auto'
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+    cooldown:
+      default-days: 3
+    groups:
+      all-actions:
+        applies-to: version-updates
+        patterns:
+          - '*'
     open-pull-requests-limit: 5
     labels:
-      - "dependencies"
-    rebase-strategy: "auto"
+      - 'dependencies'
+    rebase-strategy: 'auto'

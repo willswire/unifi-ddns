@@ -2,28 +2,34 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ddns",
 	"main": "src/index.ts",
-	"compatibility_date": "2025-09-01",
+	"compatibility_date": "2026-06-01",
 	"compatibility_flags": ["nodejs_compat"],
 
-	// KV Namespace for storing last known IP address
+	// account_id is intentionally absent: wrangler reads CLOUDFLARE_ACCOUNT_ID
+	// from the environment (GitHub Actions secret in CI, .env.local locally).
+
+	// KV namespace for storing the last known IP address per user.
+	// The placeholder IDs below are never replaced in this file; deploys go
+	// through `bun run deploy`, which generates wrangler.deploy.jsonc with the
+	// real IDs from the environment. Local `wrangler dev` simulates KV and
+	// ignores the IDs entirely. Run `bun run setup` to provision namespaces.
 	"kv_namespaces": [
 		{
 			"binding": "DDNS_KV",
-			"id": "ddns_kv_namespace",
-			"preview_id": "ddns_kv_namespace_preview"
-		}
+			"id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID",
+			"preview_id": "REPLACE_WITH_YOUR_PREVIEW_KV_NAMESPACE_ID",
+		},
 	],
 
 	// Workers Logs
 	// Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
-	// Configuration: https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
 
-	// Automatically place your workloads in an optimal location to minimize latency.
-	// Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	// Automatically place workloads in an optimal location to minimize latency.
+	// Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/
 	"placement": {
-		"mode": "smart"
-	}
+		"mode": "smart",
+	},
 }

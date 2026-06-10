@@ -7,7 +7,6 @@ This FAQ addresses common issues and solutions for configuring UniFi devices to 
 The server configuration depends on your UniFi device model:
 
 - **Older Gateways (e.g., USG, USG Pro):**
-
   - **Server:** `unifi-cloudflare-ddns.<your_worker_subdomain>.workers.dev`
   - **Note:** Do **not** include the path with variables.
 
@@ -20,11 +19,9 @@ This distinction is crucial to ensure the DDNS updates function correctly.
 ## 2. How do I configure DDNS on my UniFi device?
 
 1. **Access UniFi Controller:**
-
    - Navigate to **Settings** > **Internet** > **WAN** > **Dynamic DNS**.
 
 2. **Create New Dynamic DNS Entry:**
-
    - **Service:** Select `custom`.
    - **Hostname:** Enter your desired hostname (e.g., `subdomain.example.com`).
    - **Username:** Enter your Cloudflare account email.
@@ -52,7 +49,6 @@ Double-check your device model and adjust the server configuration accordingly.
 For **UDM-Pro** devices:
 
 1. **SSH into your UDM-Pro:**
-
    - Use an SSH client to access your device.
 
 2. **Run the following command:**
@@ -68,7 +64,6 @@ For **UDM-Pro** devices:
 For **USG** devices:
 
 1. **SSH into your USG:**
-
    - Use an SSH client to access your device.
 
 2. **Run the following command:**
@@ -117,11 +112,9 @@ To support scenarios where such a router needs to be externally available (e.g. 
 ## 12. What should I do if I continue to experience issues with DDNS updates?
 
 - **Verify Configuration:**
-
   - Double-check all entries in your DDNS settings for accuracy.
 
 - **Check Logs:**
-
   - Review system logs on your UniFi device for error messages.
 
 - **Seek Community Assistance:**

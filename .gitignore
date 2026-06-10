@@ -170,3 +170,6 @@ dist
 
 .dev.vars
 .wrangler/
+
+# Generated deploy config (real IDs injected at deploy time)
+wrangler.deploy.jsonc

@@ -3,17 +3,15 @@
 		/* Visit https://aka.ms/tsconfig.json to read more about this file */
 
 		/* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-		"target": "es2023",
+		"target": "es2024",
 		/* Specify a set of bundled library declaration files that describe the target runtime environment. */
-		"lib": ["es2023"],
-		/* Specify what JSX code is generated. */
-		"jsx": "react-jsx",
+		"lib": ["es2024"],
 
 		/* Specify what module code is generated. */
-		"module": "es2023",
+		"module": "es2022",
 		/* Specify how TypeScript looks up a file from a given module specifier. */
-		"moduleResolution": "Bundler",
-		/* Specify type package names to be included without being referenced in a source file. */
+		"moduleResolution": "bundler",
+		/* TypeScript 6 defaults to no automatic @types inclusion; the worker runtime types come from worker-configuration.d.ts. */
 		"types": [],
 		/* Enable importing .json files */
 		"resolveJsonModule": true,
@@ -36,9 +34,18 @@
 		/* Enable all strict type-checking options. */
 		"strict": true,
 
+		/* Additional checks beyond strict. */
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": true,
+
 		/* Skip type checking all .d.ts files. */
 		"skipLibCheck": true
 	},
-	"exclude": ["test"],
-	"include": ["worker-configuration.d.ts", "src/**/*.ts"]
+	"include": ["worker-configuration.d.ts", "src/**/*.ts"],
+	"exclude": ["node_modules", "dist", ".wrangler"]
 }
