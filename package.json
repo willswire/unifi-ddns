@@ -19,6 +19,6 @@
 	},
 	"dependencies": {
 		"@cloudflare/types": "7.0.0",
-		"cloudflare": "5.1.0"
+		"cloudflare": "5.2.0"
 	}
 }
