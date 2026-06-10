@@ -15,7 +15,7 @@
 		"@vitest/coverage-istanbul": "3.2.4",
 		"typescript": "6.0.3",
 		"vitest": "3.2.4",
-		"wrangler": "4.36.0"
+		"wrangler": "4.99.0"
 	},
 	"dependencies": {
 		"@cloudflare/types": "7.0.0",
