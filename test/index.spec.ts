@@ -120,6 +120,28 @@ describe('UniFi DDNS Worker', () => {
 		expect(response.status).toBe(200);
 	});
 
+	it('remaps the requested hostname to the TARGET_HOSTNAME binding when set', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({ result: [{ id: 'record-id', name: 'home.example.com', type: 'A' }] });
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+			{ TARGET_HOSTNAME: 'home.example.net' },
+		);
+		expect(response.status).toBe(200);
+		expect(mockListRecords).toHaveBeenCalledWith(expect.objectContaining({ name: 'home.example.net' }));
+		expect(mockUpdateRecord).toHaveBeenCalledWith(
+			'record-id',
+			expect.objectContaining({ name: 'home.example.net', content: '192.0.2.1' }),
+		);
+	});
+
 	it('responds with 200 on valid update when IP is set to auto', async () => {
 		mockVerify.mockResolvedValueOnce({ status: 'active' });
 		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });

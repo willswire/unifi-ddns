@@ -32,7 +32,7 @@ function constructClientOptions(request: Request): ClientOptions {
 	};
 }
 
-function constructDNSRecords(request: Request): AddressableRecord[] {
+function constructDNSRecords(request: Request, env: Env): AddressableRecord[] {
 	const url = new URL(request.url);
 	const params = url.searchParams;
 	let ip = (params.get('ip') || params.get('myip'))?.trim() || null;
@@ -60,14 +60,21 @@ function constructDNSRecords(request: Request): AddressableRecord[] {
 		ip6 = connectingIp;
 	}
 
+	// The UniFi controller sends its configured DDNS hostname verbatim. When a
+	// TARGET_HOSTNAME binding is present it wins: the record actually updated is
+	// the binding, so the controller can keep pointing at any legacy hostname.
+	const targetHostname = env?.TARGET_HOSTNAME?.trim() || null;
+
 	const hostnames = hostname.split(',').map((h) => h.trim()).filter(Boolean);
 	if (hostnames.length === 0) {
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
 	}
 
+	const names = (targetHostname !== null ? [targetHostname] : hostnames);
+
 	const records: AddressableRecord[] = [];
 
-	for (const name of hostnames) {
+	for (const name of names) {
 		records.push({
 			content: ip,
 			name,
@@ -145,11 +152,11 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 }
 
 export default {
-	async fetch(request): Promise<Response> {
+	async fetch(request, env): Promise<Response> {
 		try {
 			// Construct client options and DNS records
 			const clientOptions = constructClientOptions(request);
-			const records = constructDNSRecords(request);
+			const records = constructDNSRecords(request, env);
 
 			// Run the update function
 			return await update(clientOptions, records);

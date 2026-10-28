@@ -2,4 +2,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-empty-object-type
 interface Env {
+	/** Optional binding: when set, every update rewrites this record name
+	 *instead of the hostname the client sent (e.g. `home.jacd.tech`). */
+	TARGET_HOSTNAME?: string;
 }
