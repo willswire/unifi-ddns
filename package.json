@@ -2,6 +2,7 @@
 	"name": "unifi-ddns",
 	"version": "3.4.0",
 	"private": true,
+	"packageManager": "pnpm@12.15.0",
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
