@@ -154,3 +154,20 @@ Common error messages and their meanings:
 
 - **Seek Community Assistance:**
   - Engage with the community by posting issues or questions on relevant GitHub repositories or forums.
+
+## 15. How can I keep my AAAA (IPv6) record updated?
+
+UniFi's custom DDNS provider only offers the `%i` variable, which expands to the gateway's IPv4 address. There is no variable for the gateway's IPv6 address, so it cannot be supplied through the server URL by UniFi itself.
+
+The worker supports two workarounds:
+
+1. **`ip6=auto` (no external script needed):** append `ip6=auto` to your server URL. The worker derives the IPv6 from the `CF-Connecting-IP` header of the incoming request. When your gateway has IPv6 connectivity, it reaches the worker over IPv6, so that address is your WAN IPv6.
+
+   **Example server configuration:**
+   `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&ip6=auto&hostname=%h`
+
+   If the request does not arrive over IPv6, the worker responds with `422 — Request asked for ip6=auto but client IPv6 address cannot be determined.`
+
+2. **Explicit `ip6=<address>` (external script):** a scheduled script on a local server (for example via SSH to the gateway) can obtain the WAN IPv6 and call the worker with an explicit `ip6=<address>` parameter. This is the only option when the gateway has no IPv6 connectivity of its own.
+
+In both cases the AAAA record must already exist in Cloudflare, and `hostname` must match the name of both the A and AAAA records.
