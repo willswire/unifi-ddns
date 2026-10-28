@@ -13,7 +13,7 @@
 # Environment:
 #   DDNS_WORKER_URL  Worker endpoint, for example
 #                    https://unifi-ddns.<subdomain>.workers.dev/update
-#                    Use http://localhost:8787/update against `npm run dev`.
+#                    Use http://localhost:8787/update against `pnpm run dev`.
 #   DDNS_HOSTNAME    One record name, or several comma-separated.
 #   DDNS_EMAIL       Cloudflare account email (Basic auth username).
 #   DDNS_API_TOKEN   Cloudflare API token (Basic auth password).

@@ -126,7 +126,7 @@ Note that UniFi devices check for DDNS updates on a timer (approximately every t
 Make sure you run `wrangler deploy` from inside the cloned `unifi-ddns` directory, not from a parent directory.
 
 **"Could not resolve 'cloudflare'" error:**
-Run `npm install` before `wrangler deploy`. The Cloudflare SDK must be installed locally.
+Run `pnpm install` before `wrangler deploy`. The Cloudflare SDK must be installed locally.
 
 **"Could not read package.json" when using Click to Deploy:**
 The Click to Deploy button may fail if your Cloudflare Pages build settings are misconfigured. Try deploying via the Wrangler CLI instead (Option 2 in the README).
