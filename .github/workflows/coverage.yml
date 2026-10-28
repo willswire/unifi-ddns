@@ -20,7 +20,6 @@ jobs:
 
       - name: 'Install pnpm'
         uses: pnpm/action-setup@v4
-        with:
 
       - name: 'Install Node'
         uses: actions/setup-node@v6
