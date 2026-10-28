@@ -36,7 +36,7 @@ function constructDNSRecords(request: Request): AddressableRecord[] {
 	const url = new URL(request.url);
 	const params = url.searchParams;
 	let ip = (params.get('ip') || params.get('myip'))?.trim() || null;
-	const ip6 = params.get('ip6')?.trim() || null;
+	let ip6 = params.get('ip6')?.trim() || null;
 	const hostname = params.get('hostname')?.trim() || null;
 
 	if (ip === null || ip === undefined) {
@@ -50,6 +50,14 @@ function constructDNSRecords(request: Request): AddressableRecord[] {
 
 	if (hostname === null || hostname === undefined) {
 		throw new HttpError(422, 'The "hostname" parameter is required and cannot be empty.');
+	}
+
+	if (ip6 === 'auto') {
+		const connectingIp = request.headers.get('CF-Connecting-IP');
+		if (connectingIp === null || !connectingIp.includes(':')) {
+			throw new HttpError(422, 'Request asked for ip6=auto but client IPv6 address cannot be determined.');
+		}
+		ip6 = connectingIp;
 	}
 
 	const hostnames = hostname.split(',').map((h) => h.trim()).filter(Boolean);
@@ -125,7 +133,7 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 			zone_id: zone.id,
 			name: newRecord.name as any,
 			type: newRecord.type,
-			ttl: newRecord.ttl,
+			ttl: currentRecord.ttl,
 			proxied, // Pass the existing "proxied" status
 			comment, // Pass the existing "comment"
 		});

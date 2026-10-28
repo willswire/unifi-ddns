@@ -35,25 +35,58 @@ UniFi devices running older firmware do not natively support Cloudflare as a DDN
    ```
 4. Note the `*.workers.dev` route.
 
-### 2. **Generate a Cloudflare API Token**
+### 2. **Update an Existing Deployment**
 
-1. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
-2. Navigate to **Profile > API Tokens**
-3. Create a token using the **Edit zone DNS** template.
-4. Scope the token to **one** specific zone.
-5. Save the token securely.
+Your DDNS configuration (UniFi settings and DNS records) is not affected by redeploying the Worker — it lives in your Cloudflare zone and UniFi controller, not in the Worker itself. Only the Worker code changes.
 
-### 3. **Configure UniFi OS**
+1. Pull the latest changes from this repository:
+   ```sh
+   git pull
+   ```
+2. Update dependencies in case they changed:
+   ```sh
+   npm i
+   ```
+3. Deploy the new version:
+   ```sh
+   wrangler deploy
+   ```
+
+`wrangler deploy` overwrites the Worker in the same account and keeps the same `*.workers.dev` route as defined in [wrangler.toml](wrangler.toml), so no UniFi configuration changes are needed after the update. If your existing deployment used a different Worker name, edit the `name` field in `wrangler.toml` before deploying — deploying with a different name would create a new Worker instead of updating the existing one, and the old Worker would keep receiving updates with the previous code.
+
+To verify which version is deployed, compare it with your local copy or stream live logs during a DDNS update:
+
+```sh
+wrangler tail
+```
+
+### 3. **Generate a Cloudflare API Token**
+
+This token is created in Cloudflare, but you will **not** enter it anywhere in the Worker. The Worker never holds credentials — your UniFi gateway sends the token to it on every DDNS update.
+
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
+2. Click the profile icon (top right) and go to **My Profile > API Tokens** (or go directly to <https://dash.cloudflare.com/profile/api-tokens>).
+3. Click **Create Token** and use the **Edit zone DNS** template.
+4. Under **Zone Resources**, scope the token to **one** specific zone (the domain that holds the record to update). Tokens with access to multiple zones are rejected — see [FAQ #8](docs/faq.md).
+5. Click **Continue to summary**, then **Create Token**, and copy the token value. It is shown only once.
+
+### 4. **Configure UniFi OS**
+
+This is where the credentials are configured. The Cloudflare API token from the previous step goes into the **Password** field of the Dynamic DNS entry — nowhere else.
 
 1. Log in to your [UniFi OS Controller](https://unifi.ui.com/).
 2. Go to **Settings > Internet > WAN > Dynamic DNS**.
-3. Create New Dynamic DNS with the following information:
-   - **Service:** `custom`
-   - **Hostname:** `subdomain.example.com` or `example.com`
-   - **Username:** Cloudflare Account Email Address (e.g., `you@example.com`)
-   - **Password:** Cloudflare User API Token *(not an Account API Token)*
-   - **Server:** `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h`
-     *(Omit `https://`)*
+3. Create a new Dynamic DNS entry with the following information:
+
+   | UniFi field | Value to enter |
+   |---|---|
+   | **Service** | `custom` |
+   | **Hostname** | `subdomain.example.com` or `example.com` |
+   | **Username** | Your Cloudflare account email address (e.g., `you@example.com`) — the one that owns the API token |
+   | **Password** | The Cloudflare **API Token** created in step 3 (the 40-character string starting with something like `v1.0-...`, **not** your Cloudflare account password and **not** a Global API Key) |
+   | **Server** | `<worker-name>.<worker-subdomain>.workers.dev/update?ip=%i&hostname=%h` *(omit `https://`)* |
+
+   > For IPv6/AAAA updates, append `&ip6=auto` to the server URL so the worker derives your WAN IPv6 from the incoming connection — see [FAQ #15](docs/faq.md).
 
 ## 🛠️ **Testing & Troubleshooting**
 

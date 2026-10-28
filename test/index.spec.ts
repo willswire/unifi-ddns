@@ -32,8 +32,15 @@ vi.mock('cloudflare', () => {
 
 describe('UniFi DDNS Worker', () => {
 	beforeEach(() => {
-		// Clear all mocks before each test to prevent state leakage
+		// Clear all mocks before each test to prevent state leakage.
+		// mockReset also discards queued mockResolvedValueOnce/mockImplementationOnce
+		// values left unconsumed by tests that exit before calling the API,
+		// which clearAllMocks alone does not remove.
 		vi.clearAllMocks();
+		mockVerify.mockReset();
+		mockListZones.mockReset();
+		mockListRecords.mockReset();
+		mockUpdateRecord.mockReset();
 	});
 
 	it('responds with 401 when API token is missing', async () => {
@@ -277,6 +284,70 @@ describe('UniFi DDNS Worker', () => {
 		);
 		expect(response.status).toBe(200);
 		expect(mockUpdateRecord).toHaveBeenCalledTimes(2);
+	});
+
+	it('responds with 200 on valid update and preserves the existing TTL', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({ result: [{ id: 'record-id', name: 'home.example.com', type: 'A', ttl: 300 }] });
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		}));
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledWith('record-id', expect.objectContaining({ ttl: 300 }));
+	});
+
+	it('responds with 200 when ip6 is set to auto over an IPv6 connection', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-a', name: 'home.example.com', type: 'A' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-aaaa', name: 'home.example.com', type: 'AAAA' }] });
+		mockUpdateRecord.mockResolvedValue({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&ip6=auto&hostname=home.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+					'CF-Connecting-IP': '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+				},
+			}),
+		);
+		expect(response.status).toBe(200);
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(2);
+		expect(mockUpdateRecord).toHaveBeenCalledWith('record-id-aaaa', expect.objectContaining({
+			type: 'AAAA',
+			content: '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+		}));
+	});
+
+	it('responds with 422 when ip6 is set to auto but the connection is IPv4', async () => {
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&ip6=auto&hostname=home.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+					'CF-Connecting-IP': '192.0.2.1',
+				},
+			}),
+		);
+		expect(response.status).toBe(422);
+		expect(await response.text()).toBe('Request asked for ip6=auto but client IPv6 address cannot be determined.');
+	});
+
+	it('responds with 422 when ip6 is set to auto but no client IP header is present', async () => {
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&ip6=auto&hostname=home.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+		expect(response.status).toBe(422);
+		expect(await response.text()).toBe('Request asked for ip6=auto but client IPv6 address cannot be determined.');
 	});
 
 	it('responds with 422 when ip6 parameter is not a valid IPv6 address', async () => {
