@@ -8,6 +8,7 @@
 		"start": "wrangler dev",
 		"test": "vitest",
 		"coverage": "vitest run --coverage",
+		"force-update": "bash scripts/force-update.sh",
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {

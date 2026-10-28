@@ -90,4 +90,20 @@ This is where the credentials are configured. The Cloudflare API token from the 
 
 ## 🛠️ **Testing & Troubleshooting**
 
+### Force an update manually
+
+Dynamic DNS clients back off after a successful update, so the fastest way to confirm the worker works is to call it yourself:
+
+```sh
+DDNS_WORKER_URL=https://unifi-ddns.<subdomain>.workers.dev/update \
+DDNS_HOSTNAME=home.example.com \
+DDNS_EMAIL=you@example.com \
+DDNS_API_TOKEN=v1.0-... \
+./scripts/force-update.sh
+```
+
+`scripts/force-update.sh` (also available as `npm run force-update`) sends the same request the UniFi controller sends — Basic auth with your Cloudflare account email and API token, plus the `hostname` and `ip` query parameters — then prints the status code and the worker response. It exits non-zero when the worker rejects the request.
+
+`DDNS_IP` defaults to `auto`, which resolves to your public address from `CF-Connecting-IP`. Against `npm run dev` that header is not present, so pass an explicit address instead (`DDNS_IP=203.0.113.10`). Add `DDNS_IP6=auto` to also update the AAAA record. Run `./scripts/force-update.sh --help` for the full list of variables.
+
 Using this script with various Ubiquiti devices and different UniFi software versions can introduce unique challenges. If you encounter issues, start by checking the FAQ in `/docs/faq.md`. If you don’t find a solution, you can ask a question on the [discussions page](https://github.com/willswire/unifi-ddns/discussions/new?category=q-a). If the problem persists, please raise an issue [here](https://github.com/willswire/unifi-ddns/issues).

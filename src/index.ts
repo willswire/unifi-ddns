@@ -146,10 +146,6 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 
 export default {
 	async fetch(request): Promise<Response> {
-		console.log('Requester IP: ' + request.headers.get('CF-Connecting-IP'));
-		console.log(request.method + ': ' + request.url);
-		console.log('Body: ' + (await request.text()));
-
 		try {
 			// Construct client options and DNS records
 			const clientOptions = constructClientOptions(request);
@@ -159,10 +155,10 @@ export default {
 			return await update(clientOptions, records);
 		} catch (error) {
 			if (error instanceof HttpError) {
-				console.log('Error updating DNS record: ' + error.message);
+				console.error('Error updating DNS record: ' + error.message);
 				return new Response(error.message, { status: error.statusCode });
 			} else {
-				console.log('Error updating DNS record: ' + error);
+				console.error('Error updating DNS record: ' + error);
 				return new Response('Internal Server Error', { status: 500 });
 			}
 		}
