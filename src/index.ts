@@ -19,7 +19,12 @@ function constructClientOptions(request: Request): ClientOptions {
 	}
 
 	const [, data] = authorization.split(' ');
-	const decoded = atob(data);
+	let decoded: string;
+	try {
+		decoded = atob(data);
+	} catch {
+		throw new HttpError(401, 'Invalid API key or token.');
+	}
 	const index = decoded.indexOf(':');
 
 	if (index === -1 || /[\0-\x1F\x7F]/.test(decoded)) {
@@ -100,6 +105,7 @@ function constructDNSRecords(request: Request, env: Env): AddressableRecord[] {
 
 async function update(clientOptions: ClientOptions, newRecords: AddressableRecord[]): Promise<Response> {
 	const cloudflare = new Cloudflare(clientOptions);
+	const lines: string[] = [];
 
 	const tokenStatus = (await cloudflare.user.tokens.verify()).status;
 	if (tokenStatus !== 'active') {
@@ -130,8 +136,16 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 			throw new HttpError(400, 'No record found! You must first manually create the record.');
 		}
 
-		// Extract current properties
 		const currentRecord = records[0] as AddressableRecord;
+
+		// DynDNS2 contract: an update that would not change the record is
+		// reported as `nochg` and the API call is skipped.
+		if (currentRecord.content === newRecord.content) {
+			lines.push(`nochg ${newRecord.content}`);
+			continue;
+		}
+
+		// Extract current properties
 		const proxied = currentRecord.proxied ?? false; // Default to `false` if `proxied` is undefined
 		const comment = currentRecord.comment;
 
@@ -146,14 +160,23 @@ async function update(clientOptions: ClientOptions, newRecords: AddressableRecor
 		});
 
 		console.log('DNS record for ' + newRecord.name + '(' + newRecord.type + ') updated successfully to ' + newRecord.content);
+		lines.push(`good ${newRecord.content}`);
 	}
 
-	return new Response('OK', { status: 200 });
+	// DynDNS2 status tokens (`good <ip>` / `nochg <ip>`), one line per record;
+	// inadyn-based clients (including UniFi) parse these instead of `OK`.
+	return new Response(lines.join('\n'), { status: 200 });
 }
 
 export default {
 	async fetch(request, env): Promise<Response> {
 		try {
+			// UniFi's inadyn client only ever speaks DynDNS2 over GET; reject
+			// every other verb before touching credentials or parameters.
+			if (request.method !== 'GET') {
+				return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET' } });
+			}
+
 			// Construct client options and DNS records
 			const clientOptions = constructClientOptions(request);
 			const records = constructDNSRecords(request, env);

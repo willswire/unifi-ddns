@@ -25,8 +25,12 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Test
+        run: pnpm vitest run
       - name: Deploy
-        run: pnpm dlx wrangler deploy
+        # wrangler is a pinned devDependency; run it through pnpm so deploys
+        # never resolve an unpinned version at publish time.
+        run: pnpm wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

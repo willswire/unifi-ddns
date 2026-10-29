@@ -383,4 +383,100 @@ describe('UniFi DDNS Worker', () => {
 		expect(response.status).toBe(422);
 		expect(await response.text()).toBe('The "ip6" parameter must be a valid IPv6 address.');
 	});
+
+	it('responds with 401 when Authorization payload is not valid base64', async () => {
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			headers: {
+				// "!!!!" is not decodable base64 and must not surface as a 500.
+				Authorization: 'Basic !!!!',
+			},
+		}));
+		expect(response.status).toBe(401);
+		expect(await response.text()).toBe('Invalid API key or token.');
+	});
+
+	it('responds with 401 when Authorization header has no payload', async () => {
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			headers: {
+				Authorization: 'Basic',
+			},
+		}));
+		expect(response.status).toBe(401);
+		expect(await response.text()).toBe('Invalid API key or token.');
+	});
+
+	it('responds with 405 for POST requests', async () => {
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			method: 'POST',
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		}));
+		expect(response.status).toBe(405);
+		expect(response.headers.get('Allow')).toBe('GET');
+		expect(mockVerify).not.toHaveBeenCalled();
+	});
+
+	it('responds with 405 for DELETE requests', async () => {
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			method: 'DELETE',
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		}));
+		expect(response.status).toBe(405);
+		expect(response.headers.get('Allow')).toBe('GET');
+		expect(mockVerify).not.toHaveBeenCalled();
+	});
+
+	it('responds with a DynDNS2 "good <ip>" body on a changed record', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({ result: [{ id: 'record-id', name: 'home.example.com', type: 'A', content: '203.0.113.1' }] });
+		mockUpdateRecord.mockResolvedValueOnce({});
+
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		}));
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe('good 192.0.2.1');
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(1);
+	});
+
+	it('responds with a DynDNS2 "nochg <ip>" body and skips the update when the record is unchanged', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords.mockResolvedValueOnce({ result: [{ id: 'record-id', name: 'home.example.com', type: 'A', content: '192.0.2.1' }] });
+
+		const response = await worker.fetch(new Request('http://example.com/update?ip=192.0.2.1&hostname=home.example.com', {
+			headers: {
+				Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+			},
+		}));
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe('nochg 192.0.2.1');
+		expect(mockUpdateRecord).not.toHaveBeenCalled();
+	});
+
+	it('responds with one DynDNS2 line per hostname on a multi-hostname update', async () => {
+		mockVerify.mockResolvedValueOnce({ status: 'active' });
+		mockListZones.mockResolvedValueOnce({ result: [{ id: 'zone-id' }] });
+		mockListRecords
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-1', name: 'example.com', type: 'A', content: '203.0.113.1' }] })
+			.mockResolvedValueOnce({ result: [{ id: 'record-id-2', name: '*.example.com', type: 'A', content: '203.0.113.1' }] });
+		mockUpdateRecord.mockResolvedValue({});
+
+		const response = await worker.fetch(
+			new Request('http://example.com/update?ip=192.0.2.1&hostname=example.com,*.example.com', {
+				headers: {
+					Authorization: 'Basic ' + btoa('email@example.com:validtoken'),
+				},
+			}),
+		);
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe('good 192.0.2.1\ngood 192.0.2.1');
+		expect(mockUpdateRecord).toHaveBeenCalledTimes(2);
+	});
 });
